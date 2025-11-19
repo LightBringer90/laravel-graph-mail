@@ -1,0 +1,88 @@
+openapi: 3.0.3
+info:
+  title: ProgressiveStudios Graph Mail API
+  version: 0.1.0
+servers:
+  - url: https://yourapp.example.com/api
+paths:
+  /{prefix}/health:
+    get:
+      summary: Health check
+      parameters:
+        - name: prefix
+          in: path
+          required: true
+          schema: { type: string, example: graph-mail }
+      responses:
+        '200': { description: OK }
+  /{prefix}/messages:
+    post:
+      summary: Queue a message to send via Microsoft Graph
+      parameters:
+        - name: prefix
+          in: path
+          required: true
+          schema: { type: string, example: graph-mail }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/HtmlMessage'
+                - $ref: '#/components/schemas/TemplateMessage'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer }
+                  status: { type: string, enum: [queued, sent, failed] }
+        '422': { description: Validation error }
+  /{prefix}/messages/{id}:
+    get:
+      summary: Get message status
+      parameters:
+        - name: prefix
+          in: path
+          required: true
+          schema: { type: string, example: graph-mail }
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Message
+components:
+  schemas:
+    HtmlMessage:
+      type: object
+      required: [to, html]
+      properties:
+        sender: { type: string, format: email }
+        subject: { type: string }
+        to: { type: array, items: { type: string, format: email } }
+        cc: { type: array, items: { type: string, format: email } }
+        bcc:{ type: array, items: { type: string, format: email } }
+        html:{ type: string }
+    TemplateMessage:
+      type: object
+      required: [to, template_key]
+      properties:
+        sender: { type: string, format: email }
+        subject: { type: string, description: 'Optional subject override' }
+        to: { type: array, items: { type: string, format: email } }
+        template_key: { type: string, example: welcome.user }
+        data: { type: object }
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

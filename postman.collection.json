@@ -1,0 +1,214 @@
+{
+  "info": {
+    "_postman_id": "b61d3888-e88e-468b-a63a-693c83a861a0",
+    "name": "Graph Mail Pro API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "9176077"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base}}/{{prefix}}/health",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "{{prefix}}",
+            "health"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create HTML message",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Tests: assert 2xx and log JSON or HTML",
+              "pm.test(\"Status code is 2xx\", function () {",
+              "    pm.expect(pm.response.code).to.be.within(200, 299);",
+              "});",
+              "",
+              "// Try to parse JSON; if not JSON, log HTML/text safely",
+              "(function logResponse() {",
+              "    const contentType = pm.response.headers.get(\"Content-Type\") || \"\";",
+              "    if (contentType.includes(\"application/json\")) {",
+              "        try {",
+              "            const data = pm.response.json();",
+              "            console.log(\"Response JSON:\", data);",
+              "        } catch (e) {",
+              "            console.log(\"Response not valid JSON, raw text:\", pm.response.text());",
+              "        }",
+              "    } else {",
+              "        console.log(\"Response text/html:\", pm.response.text());",
+              "    }",
+              "})();",
+              "",
+              "/*",
+              "Troubleshooting tips for 404 Not Found:",
+              "1) Verify base and prefix variables resolve to a valid URL and path.",
+              "   - Example values:",
+              "     - base: https://your-host.example.com",
+              "     - prefix: v1 (or empty if your API path is /api/messages)",
+              "   - Full URL would resolve to: {{base}}/api/{{prefix}}/messages -> e.g. https://your-host.example.com/api/v1/messages",
+              "2) If your API does not use \"/api\" or \"prefix\", adjust the URL accordingly.",
+              "   - Examples:",
+              "     - {{base}}/messages",
+              "     - {{base}}/api/messages",
+              "3) Ensure the collection/environment has variables set:",
+              "   - base, prefix, token",
+              "   You can inspect resolved values in the console during a run using Postman \"Code\" or hover over variables.",
+              "4) Check auth:",
+              "   - Authorization header already uses Bearer {{token}}. Confirm token is valid and not expired.",
+              "5) Content-Type is set to application/json; body must match your API schema. Current payload:",
+              "   {\"subject\":\"Welcome\",\"to\":[\"alice@example.com\"],\"html\":\"<p>Hello</p>\"}",
+              "6) If server expects a different route (e.g., /send, /emails, /mail), update the path.",
+              "*/"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"subject\": \"Welcome\", \"to\": [\"visan.silviu@feg.eu\"], \"html\": \"<p>Hello</p>\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base}}/{{prefix}}/messages",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "{{prefix}}",
+            "messages"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Template message",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"template_key\": \"welcome.user\", \"data\": {\"name\": \"Alice\"}, \"to\": [\"alice@example.com\"]}"
+        },
+        "url": {
+          "raw": "{{base}}/{{prefix}}/messages",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "{{prefix}}",
+            "messages"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Show message",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base}}/{{prefix}}/messages/{{id}}",
+          "host": [
+            "{{base}}"
+          ],
+          "path": [
+            "{{prefix}}",
+            "messages",
+            "{{id}}"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base",
+      "value": "https://yourapp.example.com"
+    },
+    {
+      "key": "prefix",
+      "value": "graph-mail"
+    },
+    {
+      "key": "token",
+      "value": "<JWT>"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "name": "progressivestudios/laravel-graph-mail",
+  "description": "Microsoft Graph mail for Laravel: Create→Send, Sent/NDR tracking, throttling, subscriptions, REST APIs, RabbitMQ listener, templates, and a web UI.",
+  "type": "library",
+  "license": "MIT",
+  "authors": [{"name":"ProgressiveStudios"}],
+  "autoload": {
+    "psr-4": {
+      "ProgressiveStudios\\GraphMail\\": "src/"
+    },
+    "files": [
+      "src/helpers.php"
+    ]
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "ProgressiveStudios\\GraphMail\\GraphMailServiceProvider"
+      ],
+      "aliases": {
+        "GraphMail": "ProgressiveStudios\\GraphMail\\Facades\\GraphMail"
+      }
+    }
+  },
+  "require": {
+    "php": ">=8.2",
+    "illuminate/support": "^10.0|^11.0",
+    "illuminate/http": "^10.0|^11.0",
+    "illuminate/queue": "^10.0|^11.0",
+    "illuminate/console": "^10.0|^11.0",
+    "illuminate/events": "^10.0|^11.0",
+    "guzzlehttp/guzzle": "^7.8",
+    "php-amqplib/php-amqplib": "^3.5"
+  },
+  "require-dev": {
+    "orchestra/testbench": "^8.0|^9.0",
+    "pestphp/pest": "^2.0",
+    "mockery/mockery": "^1.6"
+  }
+}
