@@ -1,6 +1,6 @@
 {
   "name": "progressivestudios/laravel-graph-mail",
-  "description": "Microsoft Graph mail for Laravel: Create→Send, Sent/NDR tracking, throttling, subscriptions, REST APIs, RabbitMQ listener, templates, and a web UI.",
+  "description": "Graph mail for Laravel: SendMail vis Microsoft Graph, REST APIs, RabbitMQ listener, templates, and a web UI.",
   "type": "library",
   "license": "MIT",
   "authors": [{"name":"ProgressiveStudios"}],
