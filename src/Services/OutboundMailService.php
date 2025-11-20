@@ -3,13 +3,17 @@
 namespace ProgressiveStudios\GraphMail\Services;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use ProgressiveStudios\GraphMail\Models\OutboundMail;
 use ProgressiveStudios\GraphMail\Jobs\SendGraphMailJob;
+use Throwable;
 use function ProgressiveStudios\GraphMail\graph_mail_logger;
 
 class OutboundMailService
 {
+    public function __construct(
+        protected AttachmentStorageService $attachmentStorage,
+    ) {}
+
     /**
      * @param  array  $data  normalized mail data:
      *     - sender (nullable|string)
@@ -20,10 +24,9 @@ class OutboundMailService
      *     - cc (array)
      *     - bcc (array)
      *     - html (nullable|string)
-     * @param  array  $attachments  array of:
-     *     ['path' => ..., 'filename' => ..., 'mime' => ..., 'size' => ...]
+     * @param  array  $attachments  attachment descriptors, not yet stored
      *
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function queueMail(array $data, array $attachments = []): OutboundMail
     {
@@ -43,8 +46,12 @@ class OutboundMailService
             ]);
 
             if (!empty($attachments)) {
-                $mail->attachments = $attachments;
-                $mail->save();
+                $stored = $this->attachmentStorage->storeForMail($mail, $attachments);
+
+                if (!empty($stored)) {
+                    $mail->attachments = $stored;
+                    $mail->save();
+                }
             }
 
             graph_mail_logger()->info('graph-mail.queued', ['mail_id' => $mail->id]);

@@ -6,49 +6,48 @@ use ProgressiveStudios\GraphMail\Services\OutboundMailService;
 use ProgressiveStudios\GraphMail\Support\MailPayloadValidator;
 use Illuminate\Validation\ValidationException;
 use PhpAmqpLib\Message\AMQPMessage;
-use \PDOException; // Adaugat pentru a prinde erori temporare de DB
+use PDOException;
+use Throwable;
 use function ProgressiveStudios\GraphMail\graph_mail_logger;
 
 class MessageHandler
 {
-    protected $mailService;
+    protected OutboundMailService $mailService;
 
-    // Injecteaza serviciul necesar prin constructor
     public function __construct(OutboundMailService $mailService)
     {
         $this->mailService = $mailService;
     }
 
-    public function handleMessage(AMQPMessage $msg)
+    public function handleMessage(AMQPMessage $msg): void
     {
-        $rawBody = $msg->getBody();
-        $payload = json_decode($rawBody, true);
-        $deliveryTag = $msg->getDeliveryTag(); // Preluam tag-ul imediat
+        $rawBody     = $msg->getBody();
+        $payload     = json_decode($rawBody, true);
+        $deliveryTag = $msg->getDeliveryTag();
 
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($payload)) {
             graph_mail_logger()->error('rabbit.invalid_json', [
                 'error'       => json_last_error_msg(),
                 'body'        => $rawBody,
-                'deliveryTag' => $deliveryTag, // Inclus in log
+                'deliveryTag' => $deliveryTag,
             ]);
-            $msg->nack(false, false); // Nack fara requeue
+            $msg->nack(false, false);
             return;
         }
 
         try {
-            // 🔹 shared validation logic
             $data = MailPayloadValidator::validate($payload);
         } catch (ValidationException $e) {
             graph_mail_logger()->error('rabbit.invalid_payload', [
                 'errors'      => $e->errors(),
                 'payload'     => $payload,
-                'deliveryTag' => $deliveryTag, // Inclus in log
+                'deliveryTag' => $deliveryTag,
             ]);
-            $msg->nack(false, false); // Nack fara requeue
+            $msg->nack(false, false);
             return;
         }
 
-        // normalize scalar → array, just in case some producer misbehaves
+        // Normalize scalar → array
         if (isset($data['to']) && is_string($data['to'])) {
             $data['to'] = [$data['to']];
         }
@@ -58,11 +57,28 @@ class MessageHandler
             }
         }
 
-        $attachments = $data['attachments'] ?? [];
+        // Extract raw attachment payloads → descriptors
+        $attachmentPayloads = $data['attachments'] ?? [];
         unset($data['attachments']);
 
+        $attachmentDescriptors = [];
+        foreach ($attachmentPayloads as $att) {
+            if (!isset($att['filename'], $att['content'])) {
+                graph_mail_logger()->warning('rabbit.attachment_missing_fields', [
+                    'attachment' => $att,
+                ]);
+                continue;
+            }
+
+            $attachmentDescriptors[] = [
+                'filename'       => $att['filename'],
+                'mime'           => $att['mime'] ?? null,
+                'content_base64' => $att['content'],
+            ];
+        }
+
         try {
-            $mail = $this->mailService->queueMail($data, $attachments);
+            $mail = $this->mailService->queueMail($data, $attachmentDescriptors);
 
             graph_mail_logger()->info('rabbit.accept', [
                 'mail_id'     => $mail->id,
@@ -77,13 +93,13 @@ class MessageHandler
             ]);
             $msg->nack(false, true);
 
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             graph_mail_logger()->error('rabbit.error', [
                 'error'       => $e->getMessage(),
                 'payload'     => $data,
-                'deliveryTag' => $deliveryTag, // Inclus in log
+                'deliveryTag' => $deliveryTag,
             ]);
-            $msg->nack(false, false); // Nack fara requeue (sau muta in DLQ)
+            $msg->nack(false, false);
         }
     }
 }

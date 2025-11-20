@@ -12,7 +12,6 @@ class RabbitConsume extends Command
     protected $signature = 'graph-mail:rabbit:consume {--once} {--memory=128}';
     protected $description = 'Consume outbound mail messages from RabbitMQ and dispatch send jobs';
 
-    // Injectam doar serviciul de RabbitService in constructor (sau handle, cum ai facut initial)
     public function handle(RabbitService $rabbit, MessageHandler $messageHandler)
     {
         if (!config('graph-mail.rabbitmq.enabled')) {
@@ -26,7 +25,6 @@ class RabbitConsume extends Command
         $channel->basic_qos(null, (int) $cfg['prefetch'], null);
         $channel->queue_declare($cfg['queue'], false, true, false, false);
 
-        // Callback-ul devine mult mai simplu, doar paseaza mesajul catre handler
         $callback = function ($msg) use ($messageHandler) {
             $messageHandler->handleMessage($msg);
         };
