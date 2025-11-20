@@ -45,13 +45,11 @@ class OutboundMailService
                 'status'         => 'queued',
             ]);
 
-            if (!empty($attachments)) {
-                $stored = $this->attachmentStorage->storeForMail($mail, $attachments);
+            $stored = $this->attachmentStorage->storeForMail($mail, $attachments);
 
-                if (!empty($stored)) {
-                    $mail->attachments = $stored;
-                    $mail->save();
-                }
+            if (!empty($stored)) {
+                $mail->attachments = $stored; // now includes absolute_path for base64 too
+                $mail->save();
             }
 
             graph_mail_logger()->info('graph-mail.queued', ['mail_id' => $mail->id]);

@@ -21,8 +21,8 @@ class MessageHandler
 
     public function handleMessage(AMQPMessage $msg): void
     {
-        $rawBody     = $msg->getBody();
-        $payload     = json_decode($rawBody, true);
+        $rawBody = $msg->getBody();
+        $payload = json_decode($rawBody, true);
         $deliveryTag = $msg->getDeliveryTag();
 
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($payload)) {
@@ -74,6 +74,7 @@ class MessageHandler
                 'filename'       => $att['filename'],
                 'mime'           => $att['mime'] ?? null,
                 'content_base64' => $att['content'],
+                'path'           => $att['path'] ?? null,
             ];
         }
 
