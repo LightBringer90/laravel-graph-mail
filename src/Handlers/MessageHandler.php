@@ -62,26 +62,22 @@ class MessageHandler
         unset($data['attachments']);
 
         try {
-            // Logica rafinata de gestionare a exceptiilor
             $mail = $this->mailService->queueMail($data, $attachments);
 
             graph_mail_logger()->info('rabbit.accept', [
                 'mail_id'     => $mail->id,
-                'deliveryTag' => $deliveryTag, // Inclus in log
+                'deliveryTag' => $deliveryTag,
             ]);
             $msg->ack();
 
         } catch (PDOException $e) {
-            // Daca baza de date (sau alt serviciu vital) este temporar indisponibil
             graph_mail_logger()->warning('rabbit.db_error_requeue', [
                 'error'       => $e->getMessage(),
                 'deliveryTag' => $deliveryTag,
             ]);
-            // Requeue mesajul inapoi in coada principala pentru a fi incercat mai tarziu
             $msg->nack(false, true);
 
         } catch (\Throwable $e) {
-            // Pentru alte erori logice/permanente
             graph_mail_logger()->error('rabbit.error', [
                 'error'       => $e->getMessage(),
                 'payload'     => $data,

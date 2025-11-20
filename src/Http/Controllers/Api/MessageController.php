@@ -51,33 +51,7 @@ class MessageController extends Controller
         }
 
         try {
-            $attachments = [];
-
-            if ($req->hasFile('attachments')) {
-                foreach ($req->file('attachments') as $file) {
-                    if (!$file->isValid()) {
-                        throw new \RuntimeException(
-                            'Invalid uploaded attachment: '.$file->getClientOriginalName()
-                        );
-                    }
-
-                    $originalName = $file->getClientOriginalName();
-                    $userId       = $req->user()->id ?? 'default';
-                    $folder       = "graph-mail/outbound_attachments/{$userId}";
-
-                    // 🔹 operator precedence bug avoided: group folder + userId
-                    $filename = $this->uniqueFilename($folder, $originalName);
-
-                    $path = $file->storeAs($folder, $filename);
-
-                    $attachments[] = [
-                        'path'     => $path,
-                        'filename' => $filename,
-                        'mime'     => $file->getClientMimeType(),
-                        'size'     => $file->getSize(),
-                    ];
-                }
-            }
+            $attachments = $this->getAttachments($req);
 
             // 🔹 use injected service
             $mail = $this->mailService->queueMail($data, $attachments);
@@ -122,5 +96,37 @@ class MessageController extends Controller
         }
 
         return $candidate;
+    }
+
+    public function getAttachments(Request $req): array
+    {
+        $attachments = [];
+
+        if ($req->hasFile('attachments')) {
+            foreach ($req->file('attachments') as $file) {
+                if (!$file->isValid()) {
+                    throw new \RuntimeException(
+                        'Invalid uploaded attachment: '.$file->getClientOriginalName()
+                    );
+                }
+
+                $originalName = $file->getClientOriginalName();
+                $userId = $req->user()->id ?? 'default';
+                $folder = "graph-mail/outbound_attachments/{$userId}";
+
+                // 🔹 operator precedence bug avoided: group folder + userId
+                $filename = $this->uniqueFilename($folder, $originalName);
+
+                $path = $file->storeAs($folder, $filename);
+
+                $attachments[] = [
+                    'path'     => $path,
+                    'filename' => $filename,
+                    'mime'     => $file->getClientMimeType(),
+                    'size'     => $file->getSize(),
+                ];
+            }
+        }
+        return $attachments;
     }
 }
