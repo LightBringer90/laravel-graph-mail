@@ -47,9 +47,9 @@ class OutboundMailService
                 $mail->save();
             }
 
-            SendGraphMailJob::dispatch($mail->id);
-
             graph_mail_logger()->info('graph-mail.queued', ['mail_id' => $mail->id]);
+
+            SendGraphMailJob::dispatch($mail->id);
 
             return $mail;
         });
