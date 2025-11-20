@@ -200,8 +200,6 @@ class SendGraphMailJob implements ShouldQueue
                 'name'         => $filename,
                 'contentType'  => $mimeType,
                 'contentBytes' => base64_encode($fileContent),
-                'contentId'    => $filename,
-                'isInline'     => true,
             ];
         }
 
