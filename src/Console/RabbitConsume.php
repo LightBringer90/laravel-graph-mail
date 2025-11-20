@@ -4,6 +4,7 @@ namespace ProgressiveStudios\GraphMail\Console;
 
 use Illuminate\Console\Command;
 use PhpAmqpLib\Message\AMQPMessage;
+use PhpAmqpLib\Exception\AMQPTimeoutException;
 use ProgressiveStudios\GraphMail\Models\OutboundMail;
 use ProgressiveStudios\GraphMail\Jobs\SendGraphMailJob;
 use ProgressiveStudios\GraphMail\Services\RabbitService;
@@ -56,15 +57,23 @@ class RabbitConsume extends Command
 
         $this->info('Listening on RabbitMQ queue: '.$cfg['queue']);
 
+
         while ($channel->is_open()) {
-            $channel->wait(null, false, 5);
+            try {
+                $channel->wait(null, false, 5);
+            } catch (AMQPTimeoutException $e) {
+                // No message in 5 seconds. Not a real error – just continue.
+            }
+
             if ($this->option('once')) {
                 break;
             }
+
             if (memory_get_usage(true) / 1024 / 1024 > (int) $this->option('memory')) {
                 break;
             }
         }
+
 
         $channel->close();
         $connection->close();
