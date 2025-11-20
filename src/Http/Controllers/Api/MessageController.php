@@ -8,10 +8,15 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use ProgressiveStudios\GraphMail\Models\OutboundMail;
-use ProgressiveStudios\GraphMail\Jobs\SendGraphMailJob;
+use ProgressiveStudios\GraphMail\Support\MailPayloadValidator;
+use ProgressiveStudios\GraphMail\Services\OutboundMailService;
 
 class MessageController extends Controller
 {
+    public function __construct(
+        protected OutboundMailService $mailService,
+    ) {}
+
     public function health()
     {
         return response()->json(['ok' => true, 'time' => now()->toIso8601String()]);
@@ -34,77 +39,54 @@ class MessageController extends Controller
 
     public function send(Request $req)
     {
-        // Validation – Laravel returns 422 automatically on failure
-        $data = $req->validate([
-            'sender'        => 'nullable|email',
-            'subject'       => 'sometimes|string|nullable',
-            'template_key'  => 'sometimes|string|nullable',
-            'data'          => 'sometimes|array',
-            'html'          => 'sometimes|string|nullable',
-            'to'            => 'required|array|min:1',
-            'to.*'          => 'email',
-            'cc'            => 'sometimes|array',
-            'cc.*'          => 'email',
-            'bcc'           => 'sometimes|array',
-            'bcc.*'         => 'email',
-            'attachments'   => 'sometimes|array',
-            'attachments.*' => 'file|max:10240',
-        ]);
+        try {
+            // 🔹 validate payload (excluding file objects)
+            $data = MailPayloadValidator::validate($req->all());
+        } catch (ValidationException $e) {
+            // Let the client know exactly what they did wrong
+            return response()->json([
+                'message' => 'Invalid email payload.',
+                'errors'  => $e->errors(),
+            ], 422);
+        }
 
         try {
-            return DB::transaction(function () use ($data, $req) {
-                $sender = $data['sender'] ?? config('graph-mail.default_sender');
+            $attachments = [];
 
-                $m = OutboundMail::create([
-                    'sender_upn'     => $sender,
-                    'subject'        => $data['subject'] ?? null,
-                    'template_key'   => $data['template_key'] ?? null,
-                    'template_data'  => $data['data'] ?? [],
-                    'to_recipients'  => $data['to'],
-                    'cc_recipients'  => $data['cc'] ?? [],
-                    'bcc_recipients' => $data['bcc'] ?? [],
-                    'html_body'      => $data['html'] ?? null,
-                    'status'         => 'queued',
-                ]);
-
-                $attachments = [];
-
-                if ($req->hasFile('attachments')) {
-                    foreach ($req->file('attachments') as $file) {
-                        if (!$file->isValid()) {
-                            throw new \RuntimeException(
-                                'Invalid uploaded attachment: '.$file->getClientOriginalName()
-                            );
-                        }
-
-                        $originalName = $file->getClientOriginalName();
-                        $folder       = 'graph-mail/outbound_attachments/'.$m->id;
-
-                        // Build a unique, human-friendly filename
-                        $filename = $this->uniqueFilename($folder, $originalName);
-
-                        // Store using the computed filename
-                        $path = $file->storeAs($folder, $filename);
-
-                        $attachments[] = [
-                            'path'     => $path,
-                            'filename' => $filename,
-                            'mime'     => $file->getClientMimeType(),
-                            'size'     => $file->getSize(),
-                        ];
+            if ($req->hasFile('attachments')) {
+                foreach ($req->file('attachments') as $file) {
+                    if (!$file->isValid()) {
+                        throw new \RuntimeException(
+                            'Invalid uploaded attachment: '.$file->getClientOriginalName()
+                        );
                     }
+
+                    $originalName = $file->getClientOriginalName();
+                    $userId       = $req->user()->id ?? 'default';
+                    $folder       = "graph-mail/outbound_attachments/{$userId}";
+
+                    // 🔹 operator precedence bug avoided: group folder + userId
+                    $filename = $this->uniqueFilename($folder, $originalName);
+
+                    $path = $file->storeAs($folder, $filename);
+
+                    $attachments[] = [
+                        'path'     => $path,
+                        'filename' => $filename,
+                        'mime'     => $file->getClientMimeType(),
+                        'size'     => $file->getSize(),
+                    ];
                 }
+            }
 
-                $m->attachments = $attachments;
-                $m->save();
+            // 🔹 use injected service
+            $mail = $this->mailService->queueMail($data, $attachments);
 
-                SendGraphMailJob::dispatch($m->id);
+            return response()->json(
+                ['id' => $mail->id, 'status' => $mail->status],
+                202
+            );
 
-                return response()->json(
-                    ['id' => $m->id, 'status' => $m->status],
-                    202
-                );
-            });
         } catch (\Throwable $e) {
             Log::error('Failed to queue outbound mail', [
                 'message' => $e->getMessage(),
