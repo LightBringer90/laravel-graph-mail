@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use ProgressiveStudios\GraphMail\Models\OutboundMail;
 use ProgressiveStudios\GraphMail\Jobs\SendGraphMailJob;
+use function ProgressiveStudios\GraphMail\graph_mail_logger;
 
 class OutboundMailService
 {
@@ -48,7 +49,7 @@ class OutboundMailService
 
             SendGraphMailJob::dispatch($mail->id);
 
-            Log::info('graph-mail.queued', ['mail_id' => $mail->id]);
+            graph_mail_logger()->info('graph-mail.queued', ['mail_id' => $mail->id]);
 
             return $mail;
         });
