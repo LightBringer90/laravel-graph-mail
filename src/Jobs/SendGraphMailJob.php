@@ -164,7 +164,7 @@ class SendGraphMailJob implements ShouldQueue
 
         foreach ((array) $attachments as $attachment) {
             // $attachment can be a string path, or an array with `path` and maybe `filename`
-            $path     = is_array($attachment) ? ($attachment['absolute_path'] ?? null) : $attachment;
+            $path     = is_array($attachment) ? ($attachment['path'] ?? null) : $attachment;
             $filename = is_array($attachment)
                 ? ($attachment['filename'] ?? null)
                 : null;
