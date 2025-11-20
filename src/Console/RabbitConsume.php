@@ -3,20 +3,17 @@
 namespace ProgressiveStudios\GraphMail\Console;
 
 use Illuminate\Console\Command;
-use ProgressiveStudios\GraphMail\Services\OutboundMailService;
 use ProgressiveStudios\GraphMail\Services\RabbitService;
-use ProgressiveStudios\GraphMail\Support\MailPayloadValidator;
-use Illuminate\Validation\ValidationException;
-use PhpAmqpLib\Message\AMQPMessage;
+use ProgressiveStudios\GraphMail\Handlers\MessageHandler; // Import nou
 use PhpAmqpLib\Exception\AMQPTimeoutException;
-use function ProgressiveStudios\GraphMail\graph_mail_logger;
 
 class RabbitConsume extends Command
 {
     protected $signature = 'graph-mail:rabbit:consume {--once} {--memory=128}';
     protected $description = 'Consume outbound mail messages from RabbitMQ and dispatch send jobs';
 
-    public function handle(RabbitService $rabbit, OutboundMailService $mailService)
+    // Injectam doar serviciul de RabbitService in constructor (sau handle, cum ai facut initial)
+    public function handle(RabbitService $rabbit, MessageHandler $messageHandler)
     {
         if (!config('graph-mail.rabbitmq.enabled')) {
             $this->error('RabbitMQ disabled. Enable GRAPH_RABBIT_ENABLED=true');
@@ -29,56 +26,9 @@ class RabbitConsume extends Command
         $channel->basic_qos(null, (int) $cfg['prefetch'], null);
         $channel->queue_declare($cfg['queue'], false, true, false, false);
 
-        $callback = function (AMQPMessage $msg) use ($mailService) {
-            $rawBody = $msg->getBody();
-            $payload = json_decode($rawBody, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE || !is_array($payload)) {
-                graph_mail_logger()->error('rabbit.invalid_json', [
-                    'error' => json_last_error_msg(),
-                    'body'  => $rawBody,
-                ]);
-                $msg->nack(false, false);
-                return;
-            }
-
-            try {
-                // 🔹 shared validation logic
-                $data = MailPayloadValidator::validate($payload);
-            } catch (ValidationException $e) {
-                graph_mail_logger()->error('rabbit.invalid_payload', [
-                    'errors'  => $e->errors(),
-                    'payload' => $payload,
-                ]);
-                $msg->nack(false, false);
-                return;
-            }
-
-            // normalize scalar → array, just in case some producer misbehaves
-            if (isset($data['to']) && is_string($data['to'])) {
-                $data['to'] = [$data['to']];
-            }
-            foreach (['cc', 'bcc'] as $field) {
-                if (isset($data[$field]) && is_string($data[$field])) {
-                    $data[$field] = [$data[$field]];
-                }
-            }
-
-            $attachments = $data['attachments'] ?? [];
-            unset($data['attachments']);
-
-            try {
-                $mail = $mailService->queueMail($data, $attachments);
-
-                graph_mail_logger()->info('rabbit.accept', ['mail_id' => $mail->id]);
-                $msg->ack();
-            } catch (\Throwable $e) {
-                graph_mail_logger()->error('rabbit.error', [
-                    'error'   => $e->getMessage(),
-                    'payload' => $data,
-                ]);
-                $msg->nack(false, false);
-            }
+        // Callback-ul devine mult mai simplu, doar paseaza mesajul catre handler
+        $callback = function ($msg) use ($messageHandler) {
+            $messageHandler->handleMessage($msg);
         };
 
         $channel->basic_consume($cfg['queue'], '', false, false, false, false, $callback);
