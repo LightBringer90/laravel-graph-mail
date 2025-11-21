@@ -3,6 +3,7 @@
 namespace ProgressiveStudios\GraphMail;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Blade;
 
 class GraphMailServiceProvider extends ServiceProvider
 {
@@ -31,6 +32,11 @@ class GraphMailServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__.'/routes-ui.php');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'graph-mail');
 
+        // Register components namespace
+        Blade::componentNamespace(
+            'ProgressiveStudios\\GraphMail\\View\\Components',
+            'graph-mail'
+        );
 
         if ($this->app->runningInConsole()) {
             $this->commands([
