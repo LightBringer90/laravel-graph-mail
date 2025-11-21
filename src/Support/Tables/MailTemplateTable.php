@@ -131,9 +131,24 @@ class MailTemplateTable
                 ],
             ],
             [
-                'key'          => null,
-                'label'        => 'Actions',
-                'cell_view'    => 'graph-mail::components.table.cells.actions',
+                'key'       => '__actions',
+                'label'     => 'Actions',
+                'cell_view' => 'graph-mail::components.table.cells.actions',
+                'actions'   => [
+                    // You define the buttons you want
+                    [
+                        'type'  => 'link',
+                        'label' => 'Edit',
+                        'route' => ['graphmail.templates.edit', null],
+                        'class' => 'bg-sky-500 hover:bg-sky-600 text-white',
+                    ],
+                    [
+                        'type'  => 'delete',
+                        'label' => 'Delete',
+                        'route' => ['graphmail.templates.destroy', null],
+                        'class' => 'bg-rose-600 hover:bg-rose-700 text-white',
+                    ],
+                ],
                 'header_class' => 'text-center',
                 'cell_class'   => 'text-center',
             ],
