@@ -80,7 +80,7 @@ class MailTemplateTable
                 'key'       => 'name',
                 'label'     => 'Name',
                 'cell_view' => 'graph-mail::components.table.cells.two_line',
-                'secondary' => 'subject',
+                'secondary' => 'default_subject',
                 'filter'    => [
                     'type'        => 'text',
                     'label'       => 'Name',

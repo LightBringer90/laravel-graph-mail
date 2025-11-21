@@ -1,29 +1,26 @@
 @php
-    // $column['prefix'] (default "#")
-    $prefix = $column['prefix'] ?? '#';
+    // Primary text = the column value (e.g. "name")
+    $primary = $value ?? data_get($row, $column['key'] ?? null);
 
-    // route: either Closure or ['name', paramKey]
-    $routeConfig = $column['route'] ?? null;
+    // Secondary text can be:
+    // - a string key (e.g. 'default_subject')
+    // - a closure
+    // - a direct value
+    $secondary = $column['secondary'] ?? null;
 
-    $label = $prefix . ($row->id ?? $value ?? '');
-    $href  = null;
-
-    if ($routeConfig instanceof \Closure) {
-        $href = $routeConfig($row);
-    } elseif (is_array($routeConfig) && !empty($routeConfig[0])) {
-        $paramKey = $routeConfig[1] ?? null;
-        $paramVal = $paramKey ? data_get($row, $paramKey) : $row;
-        $href     = route($routeConfig[0], $paramVal);
+    if (is_string($secondary)) {
+        $secondary = data_get($row, $secondary);
+    } elseif ($secondary instanceof \Closure) {
+        $secondary = $secondary($row);
     }
 @endphp
 
-@if($href)
-    <a href="{{ $href }}"
-       class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
-        {{ $label }}
-    </a>
-@else
-    <span class="text-gray-800 dark:text-gray-100 font-medium">
-        {{ $label }}
-    </span>
+<div class="text-gray-800 dark:text-gray-100">
+    {{ $primary ?? '—' }}
+</div>
+
+@if(!empty($secondary))
+    <div class="text-[11px] text-gray-500 dark:text-gray-400 truncate max-w-xs">
+        {{ $secondary }}
+    </div>
 @endif
