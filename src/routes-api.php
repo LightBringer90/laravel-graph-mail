@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use ProgressiveStudios\GraphMail\Http\Controllers\GraphWebhookController;
 use ProgressiveStudios\GraphMail\Http\Controllers\Api\MessageController;
 
 // Webhook
