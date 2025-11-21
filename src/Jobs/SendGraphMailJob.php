@@ -168,11 +168,11 @@ class SendGraphMailJob implements ShouldQueue
      */
     protected function prepareAttachments(OutboundMail $mail): array
     {
-        $data = [];
+        $data        = [];
         $attachments = $mail->attachments ?? [];
+        $disk        = $this->disk(); // resolve here
 
         foreach ((array) $attachments as $attachment) {
-            // $attachment can be a string path, or an array with `path` and maybe `filename`
             $path = is_array($attachment) ? ($attachment['path'] ?? null) : $attachment;
             $filename = is_array($attachment)
                 ? ($attachment['filename'] ?? null)
@@ -186,7 +186,7 @@ class SendGraphMailJob implements ShouldQueue
                 continue;
             }
 
-            if (!$this->disk->exists($path)) {
+            if (!$disk->exists($path)) {
                 graph_mail_logger()->warning('mail.attachment.unreadable', [
                     'path'    => $path,
                     'name'    => $filename ?? basename($path),
@@ -195,14 +195,9 @@ class SendGraphMailJob implements ShouldQueue
                 continue;
             }
 
-            // raw file contents
-            $fileContent = $this->disk->get($path);
-
-            // derive filename
-            $filename = $filename ?: basename($path);
-
-            // mime type
-            $mimeType = $this->disk->mimeType($path) ?? 'application/octet-stream';
+            $fileContent = $disk->get($path);
+            $filename    = $filename ?: basename($path);
+            $mimeType    = $disk->mimeType($path) ?? 'application/octet-stream';
 
             $data[] = [
                 '@odata.type'  => '#microsoft.graph.fileAttachment',
