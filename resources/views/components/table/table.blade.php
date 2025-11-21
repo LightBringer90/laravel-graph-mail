@@ -1,5 +1,3 @@
-@props(['data'])
-
 @php
     $statusBadge = [
         'queued' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-100',
