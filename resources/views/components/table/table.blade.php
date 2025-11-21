@@ -1,21 +1,19 @@
 @php
     // Visible columns = those not marked hidden
-    $visibleColumns = collect($columns ?? [])->filter(fn($c) => empty($c['hidden']))->values();
+    $visibleColumns = collect($columns ?? [])->filter(fn ($c) => empty($c['hidden']))->values();
 @endphp
 
 <section
         class="rounded-2xl bg-white/90 dark:bg-gray-950/80 border border-gray-100/70 dark:border-gray-800/80 shadow-sm overflow-hidden"
 >
     {{-- Header --}}
-    <div class="border-b border-gray-100/80 dark:border-gray-800/80 px-5 py-4 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+    <div class="border-b border-gray-100/80 dark:border-gray-800/80 px-6 py-5 flex items-start justify-between text-xs text-gray-500 dark:text-gray-400">
 
         {{-- Left: title + total + subtitle --}}
-        <div class="flex flex-col gap-1">
-            <div class="flex items-center gap-2">
+        <div class="flex flex-col">
+            <div class="flex items-center gap-2 text-[12px] font-medium text-gray-700 dark:text-gray-100">
                 @if($title)
-                    <span class="font-medium text-gray-700 dark:text-gray-100">
-                        {{ $title }}
-                    </span>
+                    <span>{{ $title }}</span>
                 @endif
 
                 @if(method_exists($data, 'total'))
@@ -26,17 +24,20 @@
             </div>
 
             @if($subtitle)
-                <span class="text-[11px] text-gray-400 dark:text-gray-500">
+                <p class="mt-1.5 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
                     {{ $subtitle }}
-                </span>
+                </p>
             @endif
         </div>
 
-        {{-- Right: helper text – only *visible* if no subtitle --}}
-        <div class="hidden sm:block text-[11px] text-gray-400 dark:text-gray-500
-            @if($subtitle) invisible @endif">
-            Click a row or ID to view details.
-        </div>
+        {{-- Right: helper text – like before, only when NO subtitle --}}
+        @unless($subtitle)
+            @if(method_exists($data, 'total'))
+                <div class="hidden sm:block text-[11px] text-gray-400 dark:text-gray-500">
+                    Click a row or ID to view details.
+                </div>
+            @endif
+        @endunless
     </div>
 
     {{-- Table --}}
@@ -115,7 +116,7 @@
             </div>
 
             {{-- Right: per-page + pagination --}}
-            <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 justify-between sm:justify-end w/full sm:w-auto">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 justify-between sm:justify-end w-full sm:w-auto">
                 {{-- Per page selector --}}
                 <form method="GET" class="flex items-center gap-2 text-[11px]">
                     @foreach(request()->except('per_page', 'page') as $name => $value)
