@@ -43,8 +43,11 @@
     {{-- Main stylesheet (Tailwind / compiled CSS) --}}
     <link rel="stylesheet" href="{{ asset('vendor/graph-mail/css/graph-mail.css') }}"/>
 
+    {{-- Alpine.js  --}}
+    <script defer src="{{ asset('vendor/graph-mail/js/alpine.js') }}"></script>
+
     {{-- Chart.js --}}
-    <script src="{{ asset('vendor/graph-mail/js/chart.js') }}" defer></script>
+    <script defer src="{{ asset('vendor/graph-mail/js/chart.js') }}"></script>
 
     <style>
         .sr-only {
