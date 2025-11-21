@@ -3,9 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use ProgressiveStudios\GraphMail\Http\Controllers\Api\MessageController;
 
-// Webhook
-Route::match(['GET', 'POST'], '/graph/webhook', [GraphWebhookController::class, 'handle'])->name('graph-mail.webhook');
-
 $api = config('graph-mail.api');
 Route::middleware($api['middleware'] ?? ['api'])
     ->prefix($api['prefix'] ?? 'graph-mail')
