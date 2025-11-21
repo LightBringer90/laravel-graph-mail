@@ -79,7 +79,6 @@ class MailTemplateTable
             [
                 'key'       => 'name',
                 'label'     => 'Name',
-                // generic two-line cell: name + default_subject
                 'cell_view' => 'graph-mail::components.table.cells.two_line',
                 'secondary' => 'default_subject',
                 'filter'    => [
