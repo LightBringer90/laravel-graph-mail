@@ -1,7 +1,5 @@
 <?php
 
-use ProgressiveStudios\GraphMail\Support\DefaultNdrCorrelator;
-
 return [
     'tenant_id'     => env('GRAPH_TENANT_ID'),
     'client_id'     => env('GRAPH_CLIENT_ID'),

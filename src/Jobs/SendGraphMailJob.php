@@ -9,6 +9,7 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use ProgressiveStudios\GraphMail\Models\OutboundMail;
 use ProgressiveStudios\GraphMail\Services\GraphMailService;
 use ProgressiveStudios\GraphMail\Services\MailRenderService;
