@@ -7,6 +7,13 @@
             'sent'   => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-100',
             'failed' => 'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-100',
         ];
+
+        $hasFilters = filled(request('subject'))
+            || filled(request('to'))
+            || filled(request('sender'))
+            || filled(request('status'))
+            || filled(request('from_date'))
+            || filled(request('to_date'));
     @endphp
 
     {{-- Page header --}}
@@ -30,8 +37,30 @@
     {{-- Filters --}}
     <section
             class="mb-6 rounded-2xl bg-white/90 dark:bg-gray-950/80 border border-gray-100/70 dark:border-gray-800/80 shadow-sm">
-        <form method="GET" class="p-4 sm:p-5">
+        <div class="flex items-center justify-between border-b border-gray-100/80 dark:border-gray-800/80 px-4 sm:px-5 py-3">
+            <div>
+                <div class="text-[11px] font-semibold tracking-wide uppercase text-gray-500 dark:text-gray-400">
+                    Filters
+                </div>
+                <p class="mt-0.5 text-[11px] text-gray-400 dark:text-gray-500">
+                    Narrow down mails by content, recipient, sender or date range.
+                </p>
+            </div>
+
+            @if($hasFilters)
+                <a
+                        href="{{ route('graphmail.mails.index') }}"
+                        class="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                    <span>Clear filters</span>
+                    <span class="text-gray-400 dark:text-gray-500">&times;</span>
+                </a>
+            @endif
+        </div>
+
+        <form method="GET" class="p-4 sm:p-5 space-y-3">
             <div class="grid gap-3 md:grid-cols-6">
+                {{-- Subject --}}
                 <div class="md:col-span-2">
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                         Subject
@@ -44,6 +73,7 @@
                     />
                 </div>
 
+                {{-- Recipient --}}
                 <div class="md:col-span-2">
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                         Recipient
@@ -56,6 +86,7 @@
                     />
                 </div>
 
+                {{-- Sender --}}
                 <div class="md:col-span-1">
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                         Sender UPN
@@ -68,6 +99,7 @@
                     />
                 </div>
 
+                {{-- Status --}}
                 <div class="md:col-span-1 flex flex-col gap-1">
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                         Status
@@ -85,26 +117,7 @@
                     </select>
                 </div>
 
-                {{-- Per page --}}
-                <div class="md:col-span-1">
-                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
-                        Per page
-                    </label>
-                    <select
-                            name="per_page"
-                            class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900
-               focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30
-               dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:bg-gray-950"
-                    >
-                        @foreach([10,20,50,100] as $size)
-                            <option value="{{ $size }}" @selected(request('per_page', 10) == $size)>
-                                {{ $size }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- NEW: From date --}}
+                {{-- From date --}}
                 <div class="md:col-span-1">
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                         From date
@@ -117,7 +130,7 @@
                     />
                 </div>
 
-                {{-- NEW: To date --}}
+                {{-- To date --}}
                 <div class="md:col-span-1">
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
                         To date
@@ -131,20 +144,31 @@
                 </div>
             </div>
 
-            <div class="mt-4 flex flex-wrap items-center gap-2">
-                <button
-                        type="submit"
-                        class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-950"
-                >
-                    Filter
-                </button>
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                <div class="text-[11px] text-gray-400 dark:text-gray-500">
+                    @if($hasFilters)
+                        Showing results for current filters.
+                    @else
+                        No filters applied – showing recent mails.
+                    @endif
+                </div>
 
-                <a
-                        href="{{ route('graphmail.mails.index') }}"
-                        class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
-                >
-                    Reset
-                </a>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button
+                            type="submit"
+                            class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-950"
+                    >
+                        <span class="mr-1.5">🔍</span>
+                        Filter
+                    </button>
+
+                    <a
+                            href="{{ route('graphmail.mails.index') }}"
+                            class="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                        Reset
+                    </a>
+                </div>
             </div>
         </form>
     </section>
@@ -152,6 +176,20 @@
     {{-- Table --}}
     <section
             class="rounded-2xl bg-white/90 dark:bg-gray-950/80 border border-gray-100/70 dark:border-gray-800/80 shadow-sm overflow-hidden">
+        <div class="border-b border-gray-100/80 dark:border-gray-800/80 px-4 py-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+            <div class="flex items-center gap-2">
+                <span class="font-medium text-gray-700 dark:text-gray-100">Mail list</span>
+                @if(method_exists($mails, 'total'))
+                    <span class="text-gray-400 dark:text-gray-500">
+                        • {{ number_format($mails->total()) }} items
+                    </span>
+                @endif
+            </div>
+            <div class="hidden sm:block text-[11px] text-gray-400 dark:text-gray-500">
+                Click an ID to view full mail details.
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead>
@@ -194,18 +232,18 @@
                                     class="flex flex-wrap gap-1 max-w-xs items-center"
                                     x-data="{ showAll: false }"
                             >
-                                {{-- first 3 recipients --}}
+                                {{-- first recipients --}}
                                 @forelse($visible as $r)
                                     <span
                                             class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700
-                       dark:bg-gray-800 dark:text-gray-200"
+                                               dark:bg-gray-800 dark:text-gray-200"
                                     >
-                {{ $r }}
-            </span>
+                                        {{ $r }}
+                                    </span>
                                 @empty
                                     <span class="text-[11px] text-gray-400 italic">
-                none
-            </span>
+                                        none
+                                    </span>
                                 @endforelse
 
                                 {{-- extra recipients --}}
@@ -214,10 +252,10 @@
                                             x-show="showAll"
                                             x-cloak
                                             class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700
-                       dark:bg-gray-800 dark:text-gray-200"
+                                               dark:bg-gray-800 dark:text-gray-200"
                                     >
-                {{ $r }}
-            </span>
+                                        {{ $r }}
+                                    </span>
                                 @endforeach
 
                                 {{-- toggle button --}}
@@ -225,7 +263,7 @@
                                     <button
                                             type="button"
                                             class="inline-flex items-center rounded-full border border-dashed border-gray-300 bg-transparent px-2 py-0.5 text-[10px] font-medium text-gray-500 hover:bg-gray-100
-                       dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                                               dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
                                             x-on:click="showAll = !showAll"
                                     >
                                         <span x-show="!showAll">+ {{ count($hidden) }} more</span>
@@ -258,18 +296,50 @@
             </table>
         </div>
 
-        {{-- Pagination --}}
-        <div class="border-t border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/70 px-4 py-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-            <div>
+        {{-- Pagination + per-page --}}
+        <div class="border-t border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/70 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-gray-500 dark:text-gray-400">
+            <div class="flex items-center gap-2">
                 @if(method_exists($mails, 'firstItem') && $mails->count())
                     <span class="tabular-nums">
                         Showing {{ $mails->firstItem() }}–{{ $mails->lastItem() }}
                         of {{ $mails->total() }}
                     </span>
-                @endif
+                @else
+                    <span>No results.</span>
+                @endif>
             </div>
-            <div class="text-right">
-                {{ $mails->links() }}
+
+            <div class="flex flex-wrap items-center gap-3 sm:gap-4 justify-between sm:justify-end w-full sm:w-auto">
+                {{-- Per page selector tied to table --}}
+                <form method="GET" class="flex items-center gap-1 text-[11px]">
+                    {{-- keep existing filters when changing per_page --}}
+                    @foreach(request()->except('per_page', 'page') as $name => $value)
+                        @if(is_array($value))
+                            @foreach($value as $v)
+                                <input type="hidden" name="{{ $name }}[]" value="{{ $v }}">
+                            @endforeach
+                        @else
+                            <input type="hidden" name="{{ $name }}" value="{{ $value }}">
+                        @endif
+                    @endforeach
+
+                    <span class="text-gray-400 dark:text-gray-500">Rows per page</span>
+                    <select
+                            name="per_page"
+                            class="rounded-lg border border-gray-200 bg-white px-2 py-1 text-[11px] text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                            onchange="this.form.submit()"
+                    >
+                        @foreach([10,20,50,100] as $size)
+                            <option value="{{ $size }}" @selected(request('per_page', 10) == $size)>
+                                {{ $size }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+
+                <div class="text-right">
+                    {{ $mails->links() }}
+                </div>
             </div>
         </div>
     </section>
