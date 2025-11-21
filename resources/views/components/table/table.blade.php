@@ -8,6 +8,8 @@
 
 <section
         class="rounded-2xl bg-white/90 dark:bg-gray-950/80 border border-gray-100/70 dark:border-gray-800/80 shadow-sm overflow-hidden">
+
+    {{-- Header --}}
     <div class="border-b border-gray-100/80 dark:border-gray-800/80 px-4 py-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <div class="flex items-center gap-2">
             <span class="font-medium text-gray-700 dark:text-gray-100">Mail list</span>
@@ -22,6 +24,7 @@
         </div>
     </div>
 
+    {{-- Table --}}
     <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
             <thead>
@@ -68,7 +71,7 @@
                             @forelse($visible as $r)
                                 <span
                                         class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700
-                                           dark:bg-gray-800 dark:text-gray-200"
+                                       dark:bg-gray-800 dark:text-gray-200"
                                 >
                                     {{ $r }}
                                 </span>
@@ -84,7 +87,7 @@
                                         x-show="showAll"
                                         x-cloak
                                         class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700
-                                           dark:bg-gray-800 dark:text-gray-200"
+                                       dark:bg-gray-800 dark:text-gray-200"
                                 >
                                     {{ $r }}
                                 </span>
@@ -95,7 +98,7 @@
                                 <button
                                         type="button"
                                         class="inline-flex items-center rounded-full border border-dashed border-gray-300 bg-transparent px-2 py-0.5 text-[10px] font-medium text-gray-500 hover:bg-gray-100
-                                           dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                                       dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
                                         x-on:click="showAll = !showAll"
                                 >
                                     <span x-show="!showAll">+ {{ count($hidden) }} more</span>
@@ -129,7 +132,8 @@
     </div>
 
     {{-- Pagination + per-page --}}
-    <div class="border-t border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/70 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-gray-500 dark:text-gray-400">
+    <div class="border-t border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/70 px-4 py-4 sm:py-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 dark:text-gray-400">
+        {{-- Left: result summary --}}
         <div class="flex items-center gap-2">
             @if(method_exists($data, 'firstItem') && $data->count())
                 <span class="tabular-nums">
@@ -141,9 +145,10 @@
             @endif
         </div>
 
-        <div class="flex flex-wrap items-center gap-3 sm:gap-4 justify-between sm:justify-end w-full sm:w-auto">
-            {{-- Per page selector tied to table --}}
-            <form method="GET" class="flex items-center gap-1 text-[11px]">
+        {{-- Right: per-page + pagination --}}
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 justify-between sm:justify-end w-full sm:w-auto">
+            {{-- Per page selector --}}
+            <form method="GET" class="flex items-center gap-2 text-[11px]">
                 {{-- keep existing filters when changing per_page --}}
                 @foreach(request()->except('per_page', 'page') as $name => $value)
                     @if(is_array($value))
@@ -169,8 +174,12 @@
                 </select>
             </form>
 
-            <div class="text-right">
-                {{ $data->links() }}
+            {{-- Pagination links --}}
+            <div class="flex justify-end sm:justify-end">
+                <div class="inline-flex items-center">
+                    {{-- You can tweak onEachSide if you want fewer/more page links --}}
+                    {{ $data->onEachSide(1)->links() }}
+                </div>
             </div>
         </div>
     </div>
