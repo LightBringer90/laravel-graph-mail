@@ -13,9 +13,9 @@
     <div class="border-b border-gray-100/80 dark:border-gray-800/80 px-4 py-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <div class="flex items-center gap-2">
             <span class="font-medium text-gray-700 dark:text-gray-100">Mail list</span>
-            @if(method_exists($mails, 'total'))
+            @if(method_exists($data, 'total'))
                 <span class="text-gray-400 dark:text-gray-500">
-                    • {{ number_format($mails->total()) }} items
+                    • {{ number_format($data->total()) }} items
                 </span>
             @endif
         </div>
@@ -38,26 +38,26 @@
             </tr>
             </thead>
             <tbody>
-            @forelse($mails as $m)
+            @forelse($data as $row)
                 <tr class="border-b border-gray-50 dark:border-gray-900/70 hover:bg-gray-50/80 dark:hover:bg-gray-900/70 transition">
                     <td class="px-4 py-2 align-top whitespace-nowrap">
                         <a class="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
-                           href="{{ route('graphmail.mails.show',$m) }}">#{{ $m->id }}</a>
+                           href="{{ route('graphmail.mails.show',$row) }}">#{{ $row->id }}</a>
                     </td>
                     <td class="px-4 py-2 align-top">
                         <div class="max-w-xs md:max-w-sm truncate text-gray-800 dark:text-gray-100">
-                            {{ $m->subject }}
+                            {{ $row->subject }}
                         </div>
                     </td>
                     <td class="px-4 py-2 align-top text-[11px] font-mono text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                        {{ $m->template_key ?? '—' }}
+                        {{ $row->template_key ?? '—' }}
                     </td>
                     <td class="px-4 py-2 align-top text-xs text-gray-700 dark:text-gray-200 whitespace-nowrap">
-                        {{ $m->sender_upn }}
+                        {{ $row->sender_upn }}
                     </td>
                     <td class="px-4 py-2 align-top">
                         @php
-                            $toList   = is_array($m->to_recipients) ? $m->to_recipients : [];
+                            $toList   = is_array($row->to_recipients) ? $row->to_recipients : [];
                             $visible  = array_slice($toList, 0, 2);
                             $hidden   = array_slice($toList, 2);
                         @endphp
@@ -109,14 +109,14 @@
 
                     <td class="px-4 py-2 align-top whitespace-nowrap">
                         @php
-                            $badgeClass = $statusBadge[$m->status] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100';
+                            $badgeClass = $statusBadge[$row->status] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100';
                         @endphp
                         <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $badgeClass }}">
-                            {{ ucfirst($m->status) }}
+                            {{ ucfirst($row->status) }}
                         </span>
                     </td>
                     <td class="px-4 py-2 align-top text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                        {{ $m->created_at->format('Y-m-d H:i') }}
+                        {{ $row->created_at->format('Y-m-d H:i') }}
                     </td>
                 </tr>
             @empty
@@ -133,10 +133,10 @@
     {{-- Pagination + per-page --}}
     <div class="border-t border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/70 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-gray-500 dark:text-gray-400">
         <div class="flex items-center gap-2">
-            @if(method_exists($mails, 'firstItem') && $mails->count())
+            @if(method_exists($data, 'firstItem') && $data->count())
                 <span class="tabular-nums">
-                    Showing {{ $mails->firstItem() }}–{{ $mails->lastItem() }}
-                    of {{ $mails->total() }}
+                    Showing {{ $data->firstItem() }}–{{ $data->lastItem() }}
+                    of {{ $data->total() }}
                 </span>
             @else
                 <span>No results.</span>
@@ -172,7 +172,7 @@
             </form>
 
             <div class="text-right">
-                {{ $mails->links() }}
+                {{ $data->links() }}
             </div>
         </div>
     </div>
