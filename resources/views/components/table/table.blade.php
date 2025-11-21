@@ -1,4 +1,4 @@
-@props(['mails'])
+@props(['data'])
 
 @php
     $statusBadge = [
