@@ -85,6 +85,25 @@
                     </select>
                 </div>
 
+                {{-- Per page --}}
+                <div class="md:col-span-1">
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+                        Per page
+                    </label>
+                    <select
+                            name="per_page"
+                            class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900
+               focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30
+               dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:bg-gray-950"
+                    >
+                        @foreach([10,20,50,100] as $size)
+                            <option value="{{ $size }}" @selected(request('per_page', 10) == $size)>
+                                {{ $size }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 {{-- NEW: From date --}}
                 <div class="md:col-span-1">
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">

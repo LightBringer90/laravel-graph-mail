@@ -20,7 +20,7 @@ class OutboundMailController extends Controller
             $q->where('sender_upn', $sender);
         }
         if ($to = $r->string('to')->toString()) {
-            $q->whereJsonContains('to_recipients', $to);
+            $q->where('to_recipients', 'like', "%{$to}%");
         }
         if ($subj = $r->string('subject')->toString()) {
             $q->where('subject', 'like', "%{$subj}%");
@@ -32,7 +32,12 @@ class OutboundMailController extends Controller
             $q->where('created_at', '<=', $toDt->endOfDay());
         }
 
-        $mails = $q->orderByDesc('id')->paginate(10)->withQueryString();
+        // NEW: pagination size
+        $perPage = $r->integer('per_page', 10);   // default 10
+
+        $mails = $q->orderByDesc('id')
+            ->paginate($perPage)
+            ->withQueryString();
 
         return view('graph-mail::graph-mail.mails.index', compact('mails'));
     }
