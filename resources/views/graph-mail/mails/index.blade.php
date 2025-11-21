@@ -28,7 +28,8 @@
     </header>
 
     {{-- Filters --}}
-    <section class="mb-6 rounded-2xl bg-white/90 dark:bg-gray-950/80 border border-gray-100/70 dark:border-gray-800/80 shadow-sm">
+    <section
+            class="mb-6 rounded-2xl bg-white/90 dark:bg-gray-950/80 border border-gray-100/70 dark:border-gray-800/80 shadow-sm">
         <form method="GET" class="p-4 sm:p-5">
             <div class="grid gap-3 md:grid-cols-6">
                 <div class="md:col-span-2">
@@ -104,7 +105,8 @@
     </section>
 
     {{-- Table --}}
-    <section class="rounded-2xl bg-white/90 dark:bg-gray-950/80 border border-gray-100/70 dark:border-gray-800/80 shadow-sm overflow-hidden">
+    <section
+            class="rounded-2xl bg-white/90 dark:bg-gray-950/80 border border-gray-100/70 dark:border-gray-800/80 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead>
@@ -137,14 +139,57 @@
                             {{ $m->sender_upn }}
                         </td>
                         <td class="px-4 py-2 align-top">
-                            <div class="flex flex-wrap gap-1 max-w-xs">
-                                @foreach(($m->to_recipients ?? []) as $r)
-                                    <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                                        {{ $r }}
-                                    </span>
+                            @php
+                                $toList   = is_array($m->to_recipients) ? $m->to_recipients : [];
+                                $visible  = array_slice($toList, 0, 2);
+                                $hidden   = array_slice($toList, 2);
+                            @endphp
+
+                            <div
+                                    class="flex flex-wrap gap-1 max-w-xs items-center"
+                                    x-data="{ showAll: false }"
+                            >
+                                {{-- first 3 recipients --}}
+                                @forelse($visible as $r)
+                                    <span
+                                            class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700
+                       dark:bg-gray-800 dark:text-gray-200"
+                                    >
+                {{ $r }}
+            </span>
+                                @empty
+                                    <span class="text-[11px] text-gray-400 italic">
+                none
+            </span>
+                                @endforelse
+
+                                {{-- extra recipients --}}
+                                @foreach($hidden as $r)
+                                    <span
+                                            x-show="showAll"
+                                            x-cloak
+                                            class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700
+                       dark:bg-gray-800 dark:text-gray-200"
+                                    >
+                {{ $r }}
+            </span>
                                 @endforeach
+
+                                {{-- toggle button --}}
+                                @if(count($hidden))
+                                    <button
+                                            type="button"
+                                            class="inline-flex items-center rounded-full border border-dashed border-gray-300 bg-transparent px-2 py-0.5 text-[10px] font-medium text-gray-500 hover:bg-gray-100
+                       dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                                            x-on:click="showAll = !showAll"
+                                    >
+                                        <span x-show="!showAll">+ {{ count($hidden) }} more</span>
+                                        <span x-show="showAll" x-cloak>Show less</span>
+                                    </button>
+                                @endif
                             </div>
                         </td>
+
                         <td class="px-4 py-2 align-top whitespace-nowrap">
                             @php
                                 $badgeClass = $statusBadge[$m->status] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100';
