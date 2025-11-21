@@ -25,10 +25,10 @@ class OutboundMailController extends Controller
         if ($subj = $r->string('subject')->toString()) {
             $q->where('subject', 'like', "%{$subj}%");
         }
-        if ($from = $r->date('from')) {
+        if ($from = $r->date('from_date')) {
             $q->where('created_at', '>=', $from->startOfDay());
         }
-        if ($toDt = $r->date('to')) {
+        if ($toDt = $r->date('to_date')) {
             $q->where('created_at', '<=', $toDt->endOfDay());
         }
 
