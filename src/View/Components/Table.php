@@ -20,7 +20,8 @@ class Table extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('graph-mail::components.table.table');
-
+        return view('graph-mail::components.table.table', [
+            'data' => $this->data,
+        ]);
     }
 }
