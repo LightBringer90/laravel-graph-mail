@@ -21,6 +21,6 @@ class TableFilters extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('graph-mail::components.table.table-filters');
+        return view('graph-mail::components.table.table_filters');
     }
 }
