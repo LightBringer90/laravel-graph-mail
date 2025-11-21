@@ -223,7 +223,7 @@
                                     @if(!empty($attachment['path']))
                                         <div class="mt-1">
                                             <a
-                                                    href="{{ \Illuminate\Support\Facades\Storage::url($attachment['path']) }}"
+                                                    href="{{ $attachment['url'] }}"
                                                     class="inline-flex items-center text-[10px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-300 dark:hover:text-indigo-200"
                                                     target="_blank" rel="noopener noreferrer"
                                             >

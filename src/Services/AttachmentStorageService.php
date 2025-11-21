@@ -4,9 +4,9 @@ namespace ProgressiveStudios\GraphMail\Services;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use ProgressiveStudios\GraphMail\Models\OutboundMail;
+use function ProgressiveStudios\GraphMail\graph_mail_logger;
 
 class AttachmentStorageService
 {
@@ -63,8 +63,7 @@ class AttachmentStorageService
             return $this->storeBase64Attachment($folderRelative, $descriptor);
         }
 
-        // Unknown form → skip
-        Log::warning('graph-mail.attachment_descriptor_unrecognized', [
+        graph_mail_logger()->warning('graph-mail.attachment_descriptor_unrecognized', [
             'descriptor' => $descriptor,
         ]);
 
@@ -74,7 +73,8 @@ class AttachmentStorageService
     protected function storeUploadedFile(string $folderRelative, UploadedFile $file): ?array
     {
         if (!$file->isValid()) {
-            Log::warning('graph-mail.attachment_invalid_upload', [
+
+            graph_mail_logger()->warning('graph-mail.attachment_invalid_upload', [
                 'name' => $file->getClientOriginalName(),
             ]);
 
@@ -90,8 +90,8 @@ class AttachmentStorageService
         $path = $file->storeAs($folderRelative, $filename, $this->diskName);
 
         if (!$path) {
-            Log::error('graph-mail.attachment_store_failed_upload', [
-                'filename' => $originalName,
+            graph_mail_logger()->error('graph-mail.attachment_store_failed_upload', [
+                'filename' => $originalName
             ]);
 
             return null;
@@ -100,12 +100,10 @@ class AttachmentStorageService
         $size = $file->getSize();
 
         return [
-            'path'     => $path,                                // e.g. "graph-mail/outbound_attachments/123/foo.pdf"
-            'filename' => $filename,                            // e.g. "foo.pdf"
+            'path'     => $path,
+            'filename' => $filename,
             'mime'     => $mime,
             'size'     => $size,
-            // Optional but useful if you need the actual filesystem path:
-            'absolute_path' => $this->resolveAbsolutePath($path),
         ];
     }
 
@@ -116,8 +114,8 @@ class AttachmentStorageService
 
         $binary = base64_decode($descriptor['content_base64'], true);
         if ($binary === false) {
-            Log::warning('graph-mail.attachment_invalid_base64', [
-                'filename' => $originalName,
+            graph_mail_logger()->warning('graph-mail.attachment_invalid_base64', [
+                'filename' => $originalName
             ]);
 
             return null;
@@ -130,8 +128,8 @@ class AttachmentStorageService
         $stored = $this->disk->put($relativePath, $binary);
 
         if (!$stored) {
-            Log::error('graph-mail.attachment_store_failed_base64', [
-                'filename' => $originalName,
+            graph_mail_logger()->error('graph-mail.attachment_store_failed_base64', [
+                'filename' => $originalName
             ]);
 
             return null;
@@ -139,21 +137,17 @@ class AttachmentStorageService
 
         $size = $this->disk->size($relativePath);
 
-        $absolutePath = $this->resolveAbsolutePath($relativePath);
-
-        Log::info('graph-mail.attachment_base64_stored', [
+        graph_mail_logger()->info('graph-mail.attachment_base64_stored', [
             'disk'          => $this->diskName,
             'relative_path' => $relativePath,
-            'absolute_path' => $absolutePath,
             'size'          => $size,
         ]);
 
         return [
-            'path'          => $relativePath,       // matches uploaded-file case style
+            'path'          => $relativePath,
             'filename'      => $filename,
             'mime'          => $mime,
             'size'          => $size,
-            'absolute_path' => $absolutePath,       // this is what you can use on the "mail server"
         ];
     }
 
@@ -167,7 +161,7 @@ class AttachmentStorageService
     /**
      * Generate a unique filename inside a folder.
      *
-     * Keeps original name, appends " (1)", " (2)", ... if needed.
+     * Keeps the original name, appends "(1)", "(2)", ... if needed.
      */
     protected function uniqueFilename(string $folderRelative, string $originalName): string
     {
@@ -189,20 +183,4 @@ class AttachmentStorageService
         return $candidate;
     }
 
-    protected function resolveAbsolutePath(string $relativePath): ?string
-    {
-        // Only supported by local-like disks
-        try {
-            if (method_exists($this->disk, 'path')) {
-                return $this->disk->path($relativePath);
-            }
-        } catch (\Throwable $e) {
-            Log::warning('graph-mail.attachment_resolve_path_failed', [
-                'relative_path' => $relativePath,
-                'error'         => $e->getMessage(),
-            ]);
-        }
-
-        return null;
-    }
 }

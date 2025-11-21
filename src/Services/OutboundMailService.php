@@ -20,10 +20,10 @@ class OutboundMailService
      *     - subject (nullable|string)
      *     - template_key (nullable|string)
      *     - data (array)
-     *     - to (array)
+     *     - to (an array)
      *     - cc (array)
      *     - bcc (array)
-     *     - html (nullable|string)
+     *     - HTML (nullable|string)
      * @param  array  $attachments  attachment descriptors, not yet stored
      *
      * @throws Throwable
@@ -48,7 +48,7 @@ class OutboundMailService
             $stored = $this->attachmentStorage->storeForMail($mail, $attachments);
 
             if (!empty($stored)) {
-                $mail->attachments = $stored; // now includes absolute_path for base64 too
+                $mail->attachments = $stored;
                 $mail->save();
             }
 

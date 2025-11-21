@@ -10,16 +10,7 @@ return [
     'default_sender' => env('GRAPH_SENDER'),
     'base'           => env('GRAPH_BASE', 'https://graph.microsoft.com/v1.0'),
 
-    'webhook_url'    => env('GRAPH_WEBHOOK_URL'),
-    'webhook_secret' => env('GRAPH_WEBHOOK_SECRET'),
-
     'save_to_sent' => env('GRAPH_SAVE_TO_SENT', true),
-
-    'tracking' => [
-        'webhook' => env('GRAPH_TRACKING_WEBHOOK', true),
-        'polling' => env('GRAPH_TRACKING_POLLING', false),
-    ],
-
 
     'rate' => [
         'per_minute'  => env('GRAPH_RATE_PER_MINUTE', 30),
@@ -27,10 +18,6 @@ return [
     ],
 
     'log_channel' => env('GRAPH_MAIL_LOG_CHANNEL', 'stack'),
-
-    'ndr_correlator' => DefaultNdrCorrelator::class,
-
-    'subscription_renew_ahead' => env('GRAPH_SUB_RENEW_AHEAD_MIN', 10),
 
     'ui' => [
         'enabled'    => env('GRAPH_UI_ENABLED', true),
@@ -56,4 +43,6 @@ return [
         'prefetch' => env('RABBITMQ_PREFETCH', 10),
         'ssl'      => env('RABBITMQ_SSL', false),
     ],
+
+    'attachments_disk' => env('GRAPH_ATTACHMENTS_DISK', 'local'),
 ];

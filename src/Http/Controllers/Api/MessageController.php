@@ -9,6 +9,7 @@ use Illuminate\Validation\ValidationException;
 use ProgressiveStudios\GraphMail\Models\OutboundMail;
 use ProgressiveStudios\GraphMail\Support\MailPayloadValidator;
 use ProgressiveStudios\GraphMail\Services\OutboundMailService;
+use function ProgressiveStudios\GraphMail\graph_mail_logger;
 
 class MessageController extends Controller
 {
@@ -66,7 +67,7 @@ class MessageController extends Controller
                 202
             );
         } catch (\Throwable $e) {
-            Log::error('Failed to queue outbound mail', [
+            graph_mail_logger()->error('graph-mail.failed_to_queue_outbound_mail', [
                 'message' => $e->getMessage(),
                 'trace'   => $e->getTraceAsString(),
             ]);

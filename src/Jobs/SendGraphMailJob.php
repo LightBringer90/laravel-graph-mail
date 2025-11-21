@@ -24,9 +24,14 @@ class SendGraphMailJob implements ShouldQueue
      */
     public int $tries;
 
-    public function __construct(public int $outboundMailId)
-    {
+    public function __construct(
+        public int $outboundMailId,
+        protected ?Filesystem $disk = null,
+        protected ?string $diskName = null,
+    ) {
         $this->tries = (int) config('graph-mail.rate.max_retries', 10);
+        $this->diskName = $this->diskName ?? config('graph-mail.attachments_disk', 'local');
+        $this->disk     = $this->disk ?? Storage::disk($this->diskName);
     }
 
     /**
@@ -42,7 +47,7 @@ class SendGraphMailJob implements ShouldQueue
         $mail = OutboundMail::find($this->outboundMailId);
 
         // Mail was deleted or not found – nothing to do
-        if (! $mail) {
+        if (!$mail) {
             graph_mail_logger()->warning('mail.missing', [
                 'id' => $this->outboundMailId,
             ]);
@@ -50,7 +55,7 @@ class SendGraphMailJob implements ShouldQueue
             return;
         }
 
-        // Avoid re-sending an already sent mail if the job is re-run
+        //No re-sending for already sent mail if the job is re-run
         if ($mail->status === 'sent') {
             graph_mail_logger()->info('mail.already_sent', ['id' => $mail->id]);
             return;
@@ -68,14 +73,14 @@ class SendGraphMailJob implements ShouldQueue
             $attachments = $this->prepareAttachments($mail);
 
             $message = [
-                'subject'      => $subject,
-                'body'         => [
+                'subject'                    => $subject,
+                'body'                       => [
                     'contentType' => 'HTML',
                     'content'     => $html,
                 ],
-                'toRecipients'  => $this->mapRecipients($mail->to_recipients ?? []),
-                'ccRecipients'  => $this->mapRecipients($mail->cc_recipients ?? []),
-                'bccRecipients' => $this->mapRecipients($mail->bcc_recipients ?? []),
+                'toRecipients'               => $this->mapRecipients($mail->to_recipients ?? []),
+                'ccRecipients'               => $this->mapRecipients($mail->cc_recipients ?? []),
+                'bccRecipients'              => $this->mapRecipients($mail->bcc_recipients ?? []),
                 'isDeliveryReceiptRequested' => true,
                 'isReadReceiptRequested'     => false,
                 'attachments'                => $attachments,
@@ -89,15 +94,15 @@ class SendGraphMailJob implements ShouldQueue
             // If this does not throw, we consider the mail successfully sent
             $graph->send($mail->sender_upn, $payload);
 
-            $mail->status  = 'sent';
+            $mail->status = 'sent';
             $mail->sent_at = now(); // assuming cast to datetime on model
             $mail->save();
 
             graph_mail_logger()->info('mail.sent', ['id' => $mail->id]);
 
         } catch (RequestException $e) {
-            $resp       = $e->response;
-            $status     = $resp?->status() ?? 0;
+            $resp = $e->response;
+            $status = $resp?->status() ?? 0;
             $retryAfter = (int) ($resp?->header('Retry-After') ?? 0);
 
             graph_mail_logger()->warning('mail.send.error', [
@@ -147,7 +152,7 @@ class SendGraphMailJob implements ShouldQueue
     {
         return collect($emails)
             ->filter() // remove null/empty
-            ->map(fn (string $email) => [
+            ->map(fn(string $email) => [
                 'emailAddress' => ['address' => $email],
             ])
             ->values()
@@ -159,17 +164,17 @@ class SendGraphMailJob implements ShouldQueue
      */
     protected function prepareAttachments(OutboundMail $mail): array
     {
-        $data        = [];
+        $data = [];
         $attachments = $mail->attachments ?? [];
 
         foreach ((array) $attachments as $attachment) {
             // $attachment can be a string path, or an array with `path` and maybe `filename`
-            $path     = is_array($attachment) ? ($attachment['path'] ?? null) : $attachment;
+            $path = is_array($attachment) ? ($attachment['path'] ?? null) : $attachment;
             $filename = is_array($attachment)
                 ? ($attachment['filename'] ?? null)
                 : null;
 
-            if (! $path) {
+            if (!$path) {
                 graph_mail_logger()->warning('mail.attachment.missing_path', [
                     'attachment' => $attachment,
                     'mail_id'    => $mail->id,
@@ -177,7 +182,7 @@ class SendGraphMailJob implements ShouldQueue
                 continue;
             }
 
-            if (! Storage::exists($path)) {
+            if (!$this->disk->exists($path)) {
                 graph_mail_logger()->warning('mail.attachment.unreadable', [
                     'path'    => $path,
                     'name'    => $filename ?? basename($path),
@@ -187,13 +192,13 @@ class SendGraphMailJob implements ShouldQueue
             }
 
             // raw file contents
-            $fileContent = Storage::get($path);
+            $fileContent = $this->disk->get($path);
 
             // derive filename
             $filename = $filename ?: basename($path);
 
             // mime type
-            $mimeType = Storage::mimeType($path) ?? 'application/octet-stream';
+            $mimeType = $this->disk->mimeType($path) ?? 'application/octet-stream';
 
             $data[] = [
                 '@odata.type'  => '#microsoft.graph.fileAttachment',

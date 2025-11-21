@@ -5,6 +5,7 @@ namespace ProgressiveStudios\GraphMail\Http\Controllers\Ui;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use ProgressiveStudios\GraphMail\Models\OutboundMail;
+use Illuminate\Support\Facades\Storage;
 
 class OutboundMailController extends Controller
 {
@@ -61,6 +62,7 @@ class OutboundMailController extends Controller
                 'path'       => $att['path'] ?? null,
                 'size'       => $size,
                 'size_human' => $this->formatBytes($size),
+                'url'        => Storage::disk(config('graph-mail.attachments_disk', 'local'))->url($att['path']),
             ];
         })->all();
 
