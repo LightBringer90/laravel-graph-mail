@@ -146,7 +146,7 @@
         </div>
 
         {{-- Right: per-page + pagination --}}
-        <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 justify-between sm:justify-end w-full sm:w-auto">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8 justify-between sm:justify-end w-full sm:w-auto">
             {{-- Per page selector --}}
             <form method="GET" class="flex items-center gap-2 text-[11px]">
                 {{-- keep existing filters when changing per_page --}}
@@ -175,10 +175,9 @@
             </form>
 
             {{-- Pagination links --}}
-            <div class="flex justify-end sm:justify-end">
+            <div class="flex justify-end">
                 <div class="inline-flex items-center">
-                    {{-- You can tweak onEachSide if you want fewer/more page links --}}
-                    {{ $data->onEachSide(1)->links() }}
+                    {{ $data->onEachSide(1)->links('graph-mail::components.table.pagination') }}
                 </div>
             </div>
         </div>
