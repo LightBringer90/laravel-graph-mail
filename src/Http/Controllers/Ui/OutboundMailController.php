@@ -32,7 +32,7 @@ class OutboundMailController extends Controller
             $q->where('created_at', '<=', $toDt->endOfDay());
         }
 
-        $mails = $q->orderByDesc('id')->paginate(20)->withQueryString();
+        $mails = $q->orderByDesc('id')->paginate(10)->withQueryString();
 
         return view('graph-mail::graph-mail.mails.index', compact('mails'));
     }

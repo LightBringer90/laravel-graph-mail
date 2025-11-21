@@ -30,7 +30,7 @@ class DashboardController extends Controller
             'failed' => (int)($last24Raw['failed'] ?? 0),
         ];
 
-        $recent = OutboundMail::latest()->take(10)->get();
+        $recent = OutboundMail::latest()->orderByDesc('id')->take(10)->get();
 
         return view('graph-mail::graph-mail.dashboard', compact('counts', 'last24', 'recent'));
     }
