@@ -1,7 +1,7 @@
 @extends('graph-mail::graph-mail.layouts.app')
 
 @section('content')
-    {{-- Page header stays here, since it's page-specific --}}
+    {{-- Page header --}}
     <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
             <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Mails</h1>
@@ -19,9 +19,17 @@
         @endif
     </header>
 
-    {{-- Reusable filters component --}}
-    <x-graph-mail::table-filters />
+    {{-- Dynamic filters based on columns --}}
+    <x-graph-mail::table-filters
+            :columns="$mailTableColumns"
+            reset-route="{{ route('graphmail.mails.index') }}"
+    />
 
-    {{-- Reusable table component --}}
-    <x-graph-mail::table :data="$mails" />
+    {{-- Dynamic table --}}
+    <x-graph-mail::table
+            :data="$mails"
+            :columns="$mailTableColumns"
+            title="Mail list"
+            subtitle="Click an ID to view full mail details."
+    />
 @endsection

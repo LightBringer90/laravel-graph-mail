@@ -6,45 +6,27 @@ use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use ProgressiveStudios\GraphMail\Models\OutboundMail;
 use Illuminate\Support\Facades\Storage;
+use ProgressiveStudios\GraphMail\Support\Tables\OutboundMailTable;
 
 class OutboundMailController extends Controller
 {
-    public function index(Request $r)
+    public function __construct(
+        protected OutboundMailTable $table
+    ) {}
+
+    public function index(Request $request)
     {
-        $q = OutboundMail::query();
+        $mails = $this->table->paginated($request);
 
-        if ($s = $r->string('status')->toString()) {
-            $q->where('status', $s);
-        }
-        if ($sender = $r->string('sender')->toString()) {
-            $q->where('sender_upn', $sender);
-        }
-        if ($to = $r->string('to')->toString()) {
-            $q->where('to_recipients', 'like', "%{$to}%");
-        }
-        if ($subj = $r->string('subject')->toString()) {
-            $q->where('subject', 'like', "%{$subj}%");
-        }
-        if ($from = $r->date('from_date')) {
-            $q->where('created_at', '>=', $from->startOfDay());
-        }
-        if ($toDt = $r->date('to_date')) {
-            $q->where('created_at', '<=', $toDt->endOfDay());
-        }
-
-        // NEW: pagination size
-        $perPage = $r->integer('per_page', 10);   // default 10
-
-        $mails = $q->orderByDesc('id')
-            ->paginate($perPage)
-            ->withQueryString();
-
-        return view('graph-mail::graph-mail.mails.index', compact('mails'));
+        return view('graph-mail::graph-mail.mails.index', [
+            'mails'            => $mails,
+            'mailTableColumns' => $this->table->columns(),
+        ]);
     }
 
     public function show(OutboundMail $mail)
     {
-        // Status badge classes
+        // Status badge classes (view-specific, not table-related)
         $statusBadge = [
             'queued' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-100',
             'sent'   => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-100',
@@ -91,7 +73,7 @@ class OutboundMailController extends Controller
      */
     protected function formatBytes(?int $bytes): string
     {
-        if (! $bytes || $bytes <= 0) {
+        if (!$bytes || $bytes <= 0) {
             return '0 B';
         }
 

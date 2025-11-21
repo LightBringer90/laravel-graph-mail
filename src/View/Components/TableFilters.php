@@ -8,19 +8,25 @@ use Illuminate\View\Component;
 
 class TableFilters extends Component
 {
-    /**
-     * Create a new component instance.
-     */
-    public function __construct()
-    {
-        //
-    }
+    /** @var array<int, array<string, mixed>> */
+    public array $columns;
+
+    public string $resetRoute;
 
     /**
-     * Get the view / contents that represent the component.
+     * @param  array<int, array<string, mixed>>  $columns
      */
+    public function __construct(array $columns = [], string $resetRoute = null)
+    {
+        $this->columns    = $columns;
+        $this->resetRoute = $resetRoute ?: url()->current();
+    }
+
     public function render(): View|Closure|string
     {
-        return view('graph-mail::components.table.table_filters');
+        return view('graph-mail::components.table.table_filters', [
+            'columns'    => $this->columns,
+            'resetRoute' => $this->resetRoute,
+        ]);
     }
 }

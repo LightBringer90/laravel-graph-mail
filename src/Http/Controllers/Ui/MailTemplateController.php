@@ -6,27 +6,25 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
 use ProgressiveStudios\GraphMail\Models\MailTemplate;
+use ProgressiveStudios\GraphMail\Support\Tables\MailTemplateTable;
 
 class MailTemplateController extends Controller
 {
-    public function index()
-    {
-        $templates = MailTemplate::query()
-            ->orderBy('module')
-            ->orderBy('name')
-            ->paginate(20);
+    public function __construct(
+        protected MailTemplateTable $table
+    ) {}
 
-        $stats = MailTemplate::query()
-            ->selectRaw('COUNT(*) as total')
-            ->selectRaw('SUM(CASE WHEN active = 1 THEN 1 ELSE 0 END) as active_count')
-            ->selectRaw('SUM(CASE WHEN active = 0 THEN 1 ELSE 0 END) as inactive_count')
-            ->first();
+    public function index(Request $request)
+    {
+        $templates = $this->table->paginated($request);
+        $stats     = $this->table->stats();
 
         return view('graph-mail::graph-mail.templates.index', [
-            'templates'     => $templates,
-            'total'         => (int) $stats->total,
-            'activeCount'   => (int) $stats->active_count,
-            'inactiveCount' => (int) $stats->inactive_count,
+            'templates'            => $templates,
+            'total'                => (int) $stats->total,
+            'activeCount'          => (int) $stats->active_count,
+            'inactiveCount'        => (int) $stats->inactive_count,
+            'templateTableColumns' => $this->table->columns(),
         ]);
     }
 
@@ -41,10 +39,8 @@ class MailTemplateController extends Controller
     {
         $data = $this->validateData($request);
 
-        // hidden input + checkbox -> normalize to bool
         $data['active'] = $request->boolean('active');
 
-        // transform comma-separated strings into arrays for JSON columns
         $to  = $this->parseEmailList($data['to']  ?? null);
         $cc  = $this->parseEmailList($data['cc']  ?? null);
         $bcc = $this->parseEmailList($data['bcc'] ?? null);
@@ -66,7 +62,6 @@ class MailTemplateController extends Controller
 
         $decodedJson = $this->decodeJsonField($data['default_data'] ?? null);
 
-        // Dacă JSON-ul e valid, îl salvăm; dacă nu, îl ignorăm complet (câmp null).
         if ($decodedJson !== null) {
             $template->default_data = $decodedJson;
         }
@@ -95,21 +90,18 @@ class MailTemplateController extends Controller
     {
         $data = $this->validateData($request, $template->id);
 
-        // hidden input + checkbox -> normalize to bool
         $data['active'] = $request->boolean('active');
 
-        // transform comma-separated strings into arrays for JSON columns
         $to  = $this->parseEmailList($data['to']  ?? null);
         $cc  = $this->parseEmailList($data['cc']  ?? null);
         $bcc = $this->parseEmailList($data['bcc'] ?? null);
 
         $template->fill([
-            // cheia e readonly în form, dar o lăsăm să se „reconfirme”
             'key'             => $data['key'],
             'name'            => $data['name'],
             'to'              => $to,
             'cc'              => $cc,
-            'bcc'             => $bbox ?? $bcc, // small typo fix: use $bcc
+            'bcc'             => $bcc, // fixed typo
             'module'          => $data['module'] ?? null,
             'mailable_class'  => $data['mailable_class'] ?? null,
             'view'            => $data['view'] ?? null,
@@ -119,12 +111,6 @@ class MailTemplateController extends Controller
 
         $decodedJson = $this->decodeJsonField($data['default_data'] ?? null);
 
-        /**
-         * Reguli:
-         * - dacă textarea e goală => ștergem default_data (setăm null)
-         * - dacă textarea are conținut și JSON e valid => îl suprascriem
-         * - dacă textarea are conținut și JSON e invalid => lăsăm valoarea veche
-         */
         if ($request->filled('default_data')) {
             if ($decodedJson !== null) {
                 $template->default_data = $decodedJson;
@@ -157,6 +143,8 @@ class MailTemplateController extends Controller
             ->with('success', __('Template-ul a fost șters cu succes.'));
     }
 
+    /* ========== validation / form stuff stays ========== */
+
     protected function validateData(Request $request, ?int $id = null): array
     {
         return $request->validate([
@@ -174,7 +162,7 @@ class MailTemplateController extends Controller
             'cc'              => ['nullable', 'string', 'max:255'],
             'bcc'             => ['nullable', 'string', 'max:255'],
             'default_subject' => ['nullable', 'string', 'max:255'],
-            'default_data'    => ['nullable', 'string'], // JSON în textarea
+            'default_data'    => ['nullable', 'string'],
             'active'          => ['nullable', 'boolean'],
         ]);
     }
@@ -187,7 +175,6 @@ class MailTemplateController extends Controller
 
         $decoded = json_decode($value, true);
 
-        // dacă nu e JSON valid, îl lăsăm null sau poți arunca ValidationException
         if (json_last_error() !== JSON_ERROR_NONE) {
             return null;
         }
@@ -195,11 +182,6 @@ class MailTemplateController extends Controller
         return $decoded;
     }
 
-    /**
-     * Transformă un string de forma
-     * "a@example.com, b@example.com" într-un array
-     * pentru coloanele JSON.
-     */
     protected function parseEmailList(?string $value): ?array
     {
         if ($value === null) {
@@ -218,14 +200,10 @@ class MailTemplateController extends Controller
         return array_values(array_unique($parts));
     }
 
-    /**
-     * Shared logic for create/edit views to avoid duplication.
-     */
     protected function formView(string $view, MailTemplate $template)
     {
         $isEdit = $template->exists;
 
-        // default_data JSON
         $jsonValue = old('default_data');
         if ($jsonValue === null && $template->default_data) {
             $jsonValue = json_encode(
@@ -234,7 +212,6 @@ class MailTemplateController extends Controller
             );
         }
 
-        // For to/cc/bcc: turn arrays back into comma-separated strings
         $toValue = old('to');
         if ($toValue === null && is_array($template->to)) {
             $toValue = implode(', ', $template->to);
@@ -264,9 +241,6 @@ class MailTemplateController extends Controller
         ));
     }
 
-    /**
-     * Centralized Tailwind classes for inputs and text areas to keep them in sync.
-     */
     protected function formFieldClasses(): array
     {
         $inputClass = 'block w-full rounded-xl
