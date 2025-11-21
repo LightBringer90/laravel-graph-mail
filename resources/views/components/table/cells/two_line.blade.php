@@ -24,3 +24,6 @@
         {{ $secondary }}
     </div>
 @endif
+<div class="text-gray-800 dark:text-gray-100">
+    [two_line] {{ $primary ?? '—' }}
+</div>
