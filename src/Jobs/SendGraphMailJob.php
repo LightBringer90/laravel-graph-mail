@@ -8,8 +8,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Storage;
 use ProgressiveStudios\GraphMail\Models\OutboundMail;
 use ProgressiveStudios\GraphMail\Services\GraphMailService;
 use ProgressiveStudios\GraphMail\Services\MailRenderService;
@@ -27,12 +27,15 @@ class SendGraphMailJob implements ShouldQueue
 
     public function __construct(
         public int $outboundMailId,
-        protected ?Filesystem $disk = null,
         protected ?string $diskName = null,
     ) {
         $this->tries = (int) config('graph-mail.rate.max_retries', 10);
         $this->diskName = $this->diskName ?? config('graph-mail.attachments_disk', 'local');
-        $this->disk     = $this->disk ?? Storage::disk($this->diskName);
+    }
+
+    protected function disk(): Filesystem
+    {
+        return Storage::disk($this->diskName);
     }
 
     /**
