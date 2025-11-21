@@ -133,7 +133,7 @@ class MailTemplateTable
             [
                 'key'          => null,
                 'label'        => 'Actions',
-                'cell_view'    => 'graph-mail::components.table.cells.template_actions',
+                'cell_view'    => 'graph-mail::components.table.cells.actions',
                 'header_class' => 'text-center',
                 'cell_class'   => 'text-center',
             ],
