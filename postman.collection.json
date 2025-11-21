@@ -17,11 +17,12 @@
           }
         ],
         "url": {
-          "raw": "{{base}}/{{prefix}}/health",
+          "raw": "{{base}}/api/{{prefix}}/health",
           "host": [
             "{{base}}"
           ],
           "path": [
+            "api",
             "{{prefix}}",
             "health"
           ]
@@ -105,11 +106,12 @@
           }
         },
         "url": {
-          "raw": "{{base}}/{{prefix}}/messages",
+          "raw": "{{base}}/api/{{prefix}}/messages",
           "host": [
             "{{base}}"
           ],
           "path": [
+            "api",
             "{{prefix}}",
             "messages"
           ]
@@ -136,11 +138,12 @@
           "raw": "{\"template_key\": \"welcome.user\", \"data\": {\"name\": \"Alice\"}, \"to\": [\"alice@example.com\"]}"
         },
         "url": {
-          "raw": "{{base}}/{{prefix}}/messages",
+          "raw": "{{base}}/api/{{prefix}}/messages",
           "host": [
             "{{base}}"
           ],
           "path": [
+            "api",
             "{{prefix}}",
             "messages"
           ]
@@ -159,11 +162,12 @@
           }
         ],
         "url": {
-          "raw": "{{base}}/{{prefix}}/messages/{{id}}",
+          "raw": "{{base}}/api/{{prefix}}/messages/{{id}}",
           "host": [
             "{{base}}"
           ],
           "path": [
+            "api",
             "{{prefix}}",
             "messages",
             "{{id}}"

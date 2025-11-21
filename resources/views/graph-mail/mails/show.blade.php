@@ -136,43 +136,77 @@
             </section>
 
             {{-- 3) RECIPIENTS --}}
+            {{-- 3) RECIPIENTS --}}
             <section class="pt-4 border-t border-gray-100 dark:border-gray-800 space-y-4">
                 <div class="flex items-center justify-between gap-2">
                     <div class="text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
                         Recipients
                     </div>
                     <span class="text-[11px] text-gray-400 dark:text-gray-500">
-                To / Cc / Bcc
-            </span>
+            To / Cc / Bcc
+        </span>
                 </div>
 
                 {{-- this controls vertical space between TO / CC / BCC --}}
                 <div class="space-y-3">
                     @foreach($recipientGroups as $label => $list)
+                        @php
+                            $list = is_array($list) ? $list : [];
+                            $visibleRecipients = array_slice($list, 0, 3);
+                            $hiddenRecipients  = array_slice($list, 3);
+                        @endphp
+
                         <div
                                 class="rounded-xl border border-gray-100 bg-gray-50/80 px-3 py-3
-                           dark:border-gray-800 dark:bg-gray-900/80">
+                       dark:border-gray-800 dark:bg-gray-900/80"
+                                x-data="{ showAll: false }"
+                        >
                             <div class="flex items-center justify-between gap-2 mb-2">
                                 <div class="text-[11px] font-semibold text-gray-600 dark:text-gray-300 tracking-wide">
                                     {{ strtoupper($label) }}
                                 </div>
                                 <span class="text-[10px] text-gray-400 dark:text-gray-500">
-                            {{ is_array($list) ? count($list) : 0 }} recipient(s)
-                        </span>
+                        {{ count($list) }} recipient(s)
+                    </span>
                             </div>
 
-                            <div class="flex flex-wrap gap-1.5">
-                                @forelse($list as $r)
+                            <div class="flex flex-wrap gap-1.5 items-center">
+                                @forelse($visibleRecipients as $r)
                                     <span
                                             class="inline-flex items-center rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[11px] text-gray-800
-                                       dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-                                {{ $r }}
-                            </span>
+                                   dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                            {{ $r }}
+                        </span>
                                 @empty
                                     <span class="text-[11px] text-gray-400 italic">
-                                none
-                            </span>
+                            none
+                        </span>
                                 @endforelse
+
+                                {{-- hidden recipients --}}
+                                @foreach($hiddenRecipients as $r)
+                                    <span
+                                            x-show="showAll"
+                                            x-cloak
+                                            class="inline-flex items-center rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[11px] text-gray-800
+                                   dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                    >
+                            {{ $r }}
+                        </span>
+                                @endforeach
+
+                                {{-- toggle button --}}
+                                @if(count($hiddenRecipients))
+                                    <button
+                                            type="button"
+                                            class="inline-flex items-center rounded-full border border-dashed border-gray-300 bg-transparent px-2 py-0.5 text-[10px] font-medium text-gray-500 hover:bg-gray-100
+                                   dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                                            x-on:click="showAll = !showAll"
+                                    >
+                                        <span x-show="!showAll">+ {{ count($hiddenRecipients) }} more</span>
+                                        <span x-show="showAll" x-cloak>Show less</span>
+                                    </button>
+                                @endif
                             </div>
                         </div>
                     @endforeach

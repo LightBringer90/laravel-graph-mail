@@ -59,6 +59,7 @@
             border: 0;
         }
     </style>
+    <style>[x-cloak]{ display:none !important; }</style>
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-900 antialiased transition-colors duration-300 dark:bg-gray-950 dark:text-gray-100">
 
