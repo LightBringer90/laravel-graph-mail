@@ -79,7 +79,7 @@ class MailTemplateTable
             [
                 'key'        => 'key',
                 'label'      => 'Key',
-                'cell_class' => 'align-middle',
+                'cell_class' => 'text-xs text-gray-500 dark:text-gray-400',
             ],
             [
                 'key'       => 'name',
