@@ -68,6 +68,31 @@ class OutboundMailController extends Controller
         ]);
     }
 
+    public function downloadAttachment(OutboundMail $mail, int $index)
+    {
+        // Normalize attachments just like in show()
+        $rawAttachments = is_array($mail->attachments)
+            ? $mail->attachments
+            : (json_decode($mail->attachments ?? '[]', true) ?? []);
+
+        if (! isset($rawAttachments[$index])) {
+            abort(404, 'Attachment not found.');
+        }
+
+        $att = $rawAttachments[$index];
+
+        $disk     = config('graph-mail.attachments_disk', 'local');
+        $path     = $att['path'] ?? null;
+        $filename = $att['filename'] ?? 'attachment';
+
+        if (! $path || ! Storage::disk($disk)->exists($path)) {
+            abort(404, 'File not found.');
+        }
+
+        // Let Laravel handle headers + streaming
+        return Storage::disk($disk)->download($path, $filename);
+    }
+
     /**
      * Human-readable file sizes.
      */

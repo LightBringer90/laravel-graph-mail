@@ -22,6 +22,8 @@ if (($ui['enabled'] ?? true) && ($ui['path'] ?? null)) {
                 ->name('mails.index');
             Route::get('/mails/{mail}', [UiMailController::class, 'show'])
                 ->name('mails.show');
+            Route::get('/mails/{mail}/attachments/{index}', [UiMailController::class, 'downloadAttachment'])
+                ->name('mails.attachments.download');
 
             //Templates
             Route::get('/templates', [UiMailTemplateController::class, 'index'])

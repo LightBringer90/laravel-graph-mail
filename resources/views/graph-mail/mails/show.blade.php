@@ -256,13 +256,14 @@
 
                                     @if(!empty($attachment['path']))
                                         <div class="mt-1">
-                                            <a
-                                                    href="{{ $attachment['url'] }}"
-                                                    class="inline-flex items-center text-[10px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-300 dark:hover:text-indigo-200"
-                                                    target="_blank" rel="noopener noreferrer"
+                                            <button
+                                                    type="button"
+                                                    class="js-download-attachment inline-flex items-center text-[10px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-300 dark:hover:text-indigo-200"
+                                                    data-download-url="{{ route('mails.attachments.download', ['mail' => $mail->id, 'index' => $loop->index]) }}"
+                                                    data-filename="{{ $attachment['filename'] }}"
                                             >
                                                 Download
-                                            </a>
+                                            </button>
                                         </div>
                                     @endif
                                 </div>
@@ -299,3 +300,43 @@
 
     </div>
 @endsection
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.js-download-attachment').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const url = button.dataset.downloadUrl;
+                    const filename = button.dataset.filename || 'download';
+
+                    try {
+                        const response = await fetch(url, {
+                            method: 'GET',
+                            // Include this if you use sessions / auth cookies
+                            credentials: 'same-origin',
+                        });
+
+                        if (!response.ok) {
+                            console.error('Download failed', response.status, response.statusText);
+                            alert('Could not download the file.');
+                            return;
+                        }
+
+                        const blob = await response.blob();
+
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = filename; // this suggests the filename to the browser
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(blobUrl);
+                    } catch (e) {
+                        console.error('Download error', e);
+                        alert('An error occurred while downloading the file.');
+                    }
+                });
+            });
+        });
+    </script>
+@endpush
