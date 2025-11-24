@@ -18,7 +18,7 @@
 <section
         class="mb-6 rounded-2xl bg-white/90 dark:bg-gray-950/80 border border-gray-100/70 dark:border-gray-800/80 shadow-sm"
 >
-    <div class="flex items-center justify-between border-b border-gray-100/80 dark:border-gray-800/80 px-4 sm:px-5 py-3">
+    <div class="flex items-center justify-between border-b border-gray-100/80 dark:border-gray-800/80 px-6 py-5">
         <div>
             <div class="text-[11px] font-semibold tracking-wide uppercase text-gray-500 dark:text-gray-400">
                 Filters
@@ -39,7 +39,7 @@
         @endif
     </div>
 
-    <form method="GET" class="p-4 sm:p-5 space-y-3">
+    <form method="GET" class="p-5 sm:p-6 space-y-3">
         <div class="grid gap-3 md:grid-cols-6">
             @foreach($filterable as $column)
                 @php
