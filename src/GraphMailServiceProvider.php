@@ -34,7 +34,8 @@ class GraphMailServiceProvider extends ServiceProvider
 
         // Register components namespace
         Blade::componentNamespace(
-            'ProgressiveStudios\\GraphMail\\View\\Components',
+            'ProgressiveStudios\\GraphMail\\View\\Components\\Table\\',
+            'ProgressiveStudios\\GraphMail\\View\\Components\\Mail\\',
             'graph-mail'
         );
 
