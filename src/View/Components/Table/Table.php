@@ -1,10 +1,11 @@
 <?php
 
-namespace ProgressiveStudios\GraphMail\View\Components;
+namespace ProgressiveStudios\GraphMail\View\Components\Table;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
+use function ProgressiveStudios\GraphMail\View\Components\view;
 
 class Table extends Component
 {
