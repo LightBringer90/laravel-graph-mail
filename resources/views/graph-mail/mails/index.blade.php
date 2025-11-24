@@ -20,13 +20,13 @@
     </header>
 
     {{-- Dynamic filters based on columns --}}
-    <x-graph-mail::table-filters
+    <x-graph-mail::table.table-filters
             :columns="$mailTableColumns"
             reset-route="{{ route('graphmail.mails.index') }}"
     />
 
     {{-- Dynamic table --}}
-    <x-graph-mail::table
+    <x-graph-mail::table.table
             :data="$mails"
             :columns="$mailTableColumns"
             title="Mail list"

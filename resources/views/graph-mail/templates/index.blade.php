@@ -133,14 +133,14 @@
     @endif
 
     {{-- Dynamic filters --}}
-    <x-graph-mail::table-filters
+    <x-graph-mail::table.table-filters
             :columns="$templateTableColumns"
             reset-route="{{ route('graphmail.templates.index') }}"
     />
 
     {{-- Dynamic table --}}
     <section class="mt-4">
-        <x-graph-mail::table
+        <x-graph-mail::table.table
                 :data="$templates"
                 :columns="$templateTableColumns"
                 title="Email templates"
