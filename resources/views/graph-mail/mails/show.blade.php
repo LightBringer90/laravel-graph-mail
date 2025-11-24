@@ -259,7 +259,7 @@
                                             <button
                                                     type="button"
                                                     class="js-download-attachment inline-flex items-center text-[10px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-300 dark:hover:text-indigo-200"
-                                                    data-download-url="{{ route('mails.attachments.download', ['mail' => $mail->id, 'index' => $loop->index]) }}"
+                                                    data-download-url="{{ route('graphmail.mails.attachments.download', ['mail' => $mail->id, 'index' => $loop->index]) }}"
                                                     data-filename="{{ $attachment['filename'] }}"
                                             >
                                                 Download
