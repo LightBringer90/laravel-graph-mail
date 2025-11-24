@@ -245,25 +245,24 @@
                                         @if(!empty($attachment['mime']))
                                             <span class="uppercase">{{ $attachment['mime'] }}</span>
                                         @endif
-
-                                        @if(!empty($attachment['path']))
-                                            <span class="hidden sm:inline text-gray-300 dark:text-gray-700">•</span>
-                                            <span class="hidden sm:inline break-all">
-                                        {{ $attachment['path'] }}
-                                    </span>
-                                        @endif
                                     </div>
 
                                     @if(!empty($attachment['path']))
                                         <div class="mt-1">
                                             <button
                                                     type="button"
-                                                    class="js-download-attachment inline-flex items-center text-[10px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-300 dark:hover:text-indigo-200"
+                                                    class="js-download-attachment inline-flex items-center gap-1 text-[10px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-300 dark:hover:text-indigo-200"
                                                     data-download-url="{{ route('graphmail.mails.attachments.download', ['mail' => $mail->id, 'index' => $loop->index]) }}"
                                                     data-filename="{{ $attachment['filename'] }}"
                                             >
-                                                Download
+                                                <span class="download-label">Download</span>
+
+                                                <span
+                                                        class="download-spinner hidden h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin"
+                                                        aria-hidden="true"
+                                                ></span>
                                             </button>
+
                                         </div>
                                     @endif
                                 </div>
@@ -305,13 +304,36 @@
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.js-download-attachment').forEach(button => {
                 button.addEventListener('click', async () => {
+                    // Don't double-trigger
+                    if (button.dataset.loading === '1') {
+                        return;
+                    }
+
                     const url = button.dataset.downloadUrl;
                     const filename = button.dataset.filename || 'download';
+
+                    const labelEl = button.querySelector('.download-label');
+                    const spinnerEl = button.querySelector('.download-spinner');
+
+                    // Save original label text so we can restore it
+                    const originalText = labelEl ? labelEl.textContent : button.textContent;
+
+                    // Enter loading state
+                    button.dataset.loading = '1';
+                    button.disabled = true;
+                    button.classList.add('opacity-60', 'pointer-events-none');
+                    button.setAttribute('aria-busy', 'true');
+
+                    if (labelEl) {
+                        labelEl.textContent = 'Downloading...';
+                    }
+                    if (spinnerEl) {
+                        spinnerEl.classList.remove('hidden');
+                    }
 
                     try {
                         const response = await fetch(url, {
                             method: 'GET',
-                            // Include this if you use sessions / auth cookies
                             credentials: 'same-origin',
                         });
 
@@ -326,7 +348,7 @@
                         const blobUrl = window.URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = blobUrl;
-                        a.download = filename; // this suggests the filename to the browser
+                        a.download = filename;
                         document.body.appendChild(a);
                         a.click();
                         a.remove();
@@ -334,6 +356,19 @@
                     } catch (e) {
                         console.error('Download error', e);
                         alert('An error occurred while downloading the file.');
+                    } finally {
+                        // Exit loading state
+                        button.dataset.loading = '0';
+                        button.disabled = false;
+                        button.classList.remove('opacity-60', 'pointer-events-none');
+                        button.removeAttribute('aria-busy');
+
+                        if (labelEl) {
+                            labelEl.textContent = originalText;
+                        }
+                        if (spinnerEl) {
+                            spinnerEl.classList.add('hidden');
+                        }
                     }
                 });
             });
